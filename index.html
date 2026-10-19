@@ -97,7 +97,13 @@
       </div>
     </section>
 
-    <section id="monitorScene" class="scene monitor-scene" aria-label="IRA Global Intelligence Monitor">
+    <section id="monitorScene" class="scene monitor-scene jarvis-scene" aria-label="IRA Global Intelligence Monitor">
+      <div class="jarvis-brand"><span class="brand-mark"><i></i><i></i><i></i></span><b>IRA</b><small>AI</small><em>INTELLIGENCE GRID</em></div>
+      <div class="jarvis-dials" aria-hidden="true">
+        <div class="jdial"><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="27"/><circle class="val" id="dialReactorArc" cx="32" cy="32" r="27"/></svg><b id="dialReactor">93%</b><small>REACTOR</small></div>
+        <div class="jdial"><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="27"/><circle class="val" id="dialSignalArc" cx="32" cy="32" r="27"/></svg><b id="dialSignal">88%</b><small>SIGNAL</small></div>
+        <div class="jdial"><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="27"/><circle class="val" id="dialSyncArc" cx="32" cy="32" r="27"/></svg><b id="dialSync">100%</b><small>SYNC</small></div>
+      </div>
       <div class="monitor-statusbar">
         <div><span class="live-dot"></span><b>IRA GLOBAL MONITOR</b><small>LIVE INTELLIGENCE ENVIRONMENT</small></div>
         <div class="monitor-clock"><span id="monitorDate">--</span><b id="monitorTime">--:--:-- UTC</b></div>
@@ -115,12 +121,20 @@
               <label><input type="checkbox" checked data-layer="system"><i class="violet"></i> NETWORK NODES</label>
             </aside>
             <div class="world-map" id="worldMap"><img src="/assets/world-map-dark.webp" alt="World situation map" loading="eager" decoding="async"/><div id="mapEvents"></div><div class="map-scan"></div><div class="map-zoom"><button type="button" data-zoom="in">+</button><button type="button" data-zoom="out">−</button><button type="button" data-zoom="reset">⌂</button></div></div>
+            <div class="jarvis-core" id="jarvisCore" aria-hidden="true">
+              <div class="jcore-ring ring-dash"></div>
+              <div class="jcore-ring ring-seg"></div>
+              <div class="jcore-ring ring-hex"></div>
+              <div class="jcore-ring ring-tick"></div>
+              <img class="jcore-brain" src="/assets/ira-cloud-brain.png" alt="" />
+              <div class="jcore-hub"></div>
+            </div>
             <div class="map-legend"><span><i class="red"></i> Critical</span><span><i class="orange"></i> Elevated</span><span><i class="cyan"></i> Monitoring</span></div>
           </div>
         </article>
 
         <article class="intel-panel ira-insights">
-          <header><div><small>IRA INSIGHTS</small><b>LIVE ANALYSIS</b></div><span class="live-badge">LIVE</span></header>
+          <header><div><small>IRA CLOUD BRAIN</small><b>LIVE ANALYSIS</b></div><span class="live-badge">LIVE</span></header>
           <div class="insight-scroll" id="insightMessages">
             <div class="insight-card"><small>WORLD BRIEF</small><p id="worldBrief">Connecting to real-time intelligence feeds…</p></div>
             <div class="insight-card accent"><small>IRA STATUS</small><p>I am monitoring live signals. Ask me about any event, location, or headline.</p></div>
@@ -133,23 +147,29 @@
           <div class="headline-list" id="headlineList"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div>
         </article>
 
+        <article class="intel-panel video-panel">
+          <header><div><small>LIVE BROADCAST</small><b>GLOBAL NEWS FEED</b></div><a id="videoWatchLink" href="https://www.youtube.com/@dwnews/live" target="_blank" rel="noreferrer">WATCH ↗</a></header>
+          <div class="video-body">
+            <iframe id="newsVideo" src="https://www.youtube-nocookie.com/embed/live_stream?channel=UCknLrEdhRCp1aegoMqRaCZg&amp;autoplay=0&amp;mute=1" title="Live global news broadcast" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+            <div class="video-scan"></div>
+          </div>
+        </article>
+
         <article class="intel-panel signals-panel">
           <header><div><small>LIVE SIGNALS</small><b>EARTH & WEATHER</b></div><span>REAL TIME</span></header>
           <div class="signal-cards">
             <div><small>LOCAL WEATHER</small><b id="weatherValue">--°</b><span id="weatherDetail">Ghaziabad · connecting</span></div>
             <div><small>SEISMIC EVENTS</small><b id="quakeValue">--</b><span>Past 24 hours</span></div>
             <div><small>UTC NETWORK</small><b id="networkValue">SYNC</b><span>Public data feeds</span></div>
+
           </div>
         </article>
 
-        <article class="intel-panel feeds-panel">
-          <header><div><small>VISUAL INTELLIGENCE</small><b>GLOBAL FEEDS</b></div><span>4 CHANNELS</span></header>
-          <div class="feed-grid"><div><i></i><span>NEW DELHI</span></div><div><i></i><span>LONDON</span></div><div><i></i><span>NEW YORK</span></div><div><i></i><span>TOKYO</span></div></div>
-        </article>
       </div>
     </section>
 
     <section id="cockpitScene" class="scene cockpit-scene" aria-label="IRA Starship Cockpit">
+      <div class="jarvis-brand cockpit-brand"><span class="brand-mark"><i></i><i></i><i></i></span><b>IRA</b><small>AI</small><em>STARSHIP COCKPIT</em></div>
       <div class="cockpit-statusbar">
         <div><span class="live-dot amber-dot"></span><b>IRA // STARSHIP COCKPIT</b><small>DEEP SPACE COMMAND INTERFACE</small></div>
         <div class="cockpit-clock"><span id="cockpitDate">--</span><b id="cockpitTime">--:--:-- UTC</b></div>
@@ -176,6 +196,7 @@
           <div class="hud-ladder" aria-hidden="true"></div>
           <div class="hud-ring hud-ring-outer"></div>
           <div class="hud-ring hud-ring-inner"></div>
+          <img class="hud-brain" src="/assets/ira-cloud-brain.png" alt="IRA cloud brain core" />
           <div class="hud-compass" id="hudCompass"></div>
           <div class="hud-reticle"><i></i><i></i><i></i><i></i><em></em></div>
           <div class="hud-corner tl"></div><div class="hud-corner tr"></div><div class="hud-corner bl"></div><div class="hud-corner br"></div>
