@@ -98,16 +98,17 @@
     </section>
 
     <section id="monitorScene" class="scene monitor-scene jarvis-scene" aria-label="IRA Global Intelligence Monitor">
-      <div class="jarvis-brand"><span class="brand-mark"><i></i><i></i><i></i></span><b>IRA</b><small>AI</small><em>INTELLIGENCE GRID</em></div>
-      <div class="jarvis-dials" aria-hidden="true">
-        <div class="jdial"><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="27"/><circle class="val" id="dialReactorArc" cx="32" cy="32" r="27"/></svg><b id="dialReactor">93%</b><small>REACTOR</small></div>
-        <div class="jdial"><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="27"/><circle class="val" id="dialSignalArc" cx="32" cy="32" r="27"/></svg><b id="dialSignal">88%</b><small>SIGNAL</small></div>
-        <div class="jdial"><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="27"/><circle class="val" id="dialSyncArc" cx="32" cy="32" r="27"/></svg><b id="dialSync">100%</b><small>SYNC</small></div>
-      </div>
       <div class="monitor-statusbar">
-        <div><span class="live-dot"></span><b>IRA GLOBAL MONITOR</b><small>LIVE INTELLIGENCE ENVIRONMENT</small></div>
+        <div class="statusbar-brand"><span class="brand-mark"><i></i><i></i><i></i></span><b>IRA AI</b><small>GLOBAL MONITOR</small></div>
         <div class="monitor-clock"><span id="monitorDate">--</span><b id="monitorTime">--:--:-- UTC</b></div>
-        <div class="threat-level"><small>GLOBAL SIGNAL</small><b id="signalLevel">ELEVATED</b></div>
+        <div class="statusbar-right">
+          <div class="jarvis-dials" aria-hidden="true">
+            <div class="jdial"><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="27"/><circle class="val" id="dialReactorArc" cx="32" cy="32" r="27"/></svg><b id="dialReactor">93%</b><small>PWR</small></div>
+            <div class="jdial"><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="27"/><circle class="val" id="dialSignalArc" cx="32" cy="32" r="27"/></svg><b id="dialSignal">88%</b><small>SIG</small></div>
+            <div class="jdial"><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="27"/><circle class="val" id="dialSyncArc" cx="32" cy="32" r="27"/></svg><b id="dialSync">100%</b><small>SYNC</small></div>
+          </div>
+          <div class="threat-level"><small>GLOBAL SIGNAL</small><b id="signalLevel">ELEVATED</b></div>
+        </div>
       </div>
       <div class="monitor-grid">
         <article class="intel-panel map-panel">
@@ -169,9 +170,8 @@
     </section>
 
     <section id="cockpitScene" class="scene cockpit-scene" aria-label="IRA Starship Cockpit">
-      <div class="jarvis-brand cockpit-brand"><span class="brand-mark"><i></i><i></i><i></i></span><b>IRA</b><small>AI</small><em>STARSHIP COCKPIT</em></div>
       <div class="cockpit-statusbar">
-        <div><span class="live-dot amber-dot"></span><b>IRA // STARSHIP COCKPIT</b><small>DEEP SPACE COMMAND INTERFACE</small></div>
+        <div class="statusbar-brand cockpit-brand"><span class="brand-mark"><i></i><i></i><i></i></span><b>IRA AI</b><small>STARSHIP COCKPIT</small></div>
         <div class="cockpit-clock"><span id="cockpitDate">--</span><b id="cockpitTime">--:--:-- UTC</b></div>
         <div class="hull-status"><small>HULL INTEGRITY</small><b id="hullValue">100%</b></div>
       </div>
