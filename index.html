@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#05070b" />
+  <title>IRA AI — Personal Intelligence</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="welcome-active">
+  <canvas id="starfield" aria-hidden="true"></canvas>
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="aurora aurora-one"></div><div class="aurora aurora-two"></div>
+    <div class="horizon-grid"></div><div class="radar-ring ring-one"></div><div class="radar-ring ring-two"></div>
+  </div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <section class="welcome-screen" id="welcomeScreen" aria-label="Welcome to IRA">
+    <div class="welcome-orbit orbit-outer"></div><div class="welcome-orbit orbit-inner"></div>
+    <div class="welcome-content">
+      <div class="welcome-logo" aria-hidden="true"><i></i><i></i><i></i><span></span></div>
+      <div class="welcome-kicker">IMMERSIVE RESPONSIVE ASSISTANT</div>
+      <h2>Welcome to <strong>IRA</strong></h2>
+      <p>Your intelligence. Your interface. Your world.</p>
+      <div class="entry-loader" aria-label="IRA is starting">
+        <div class="entry-track"><i></i></div>
+        <span>INITIALIZING EXPERIENCE</span><b id="welcomeTimer">5.0</b>
+      </div>
+      <small><b></b> ALL SYSTEMS READY</small>
+    </div>
+  </section>
+
+  <header class="topbar app-interface">
+    <button class="brand" id="homeBtn" aria-label="IRA home">
+      <span class="brand-mark"><i></i><i></i><i></i></span>
+      <span>IRA</span><b>AI</b>
+    </button>
+    <div class="status-pill"><span></span> SYSTEM ONLINE</div>
+    <div class="top-actions">
+      <button class="settings-button" id="settingsBtn" aria-label="Open settings" title="Settings"><span>⚙</span><b>SETTINGS</b></button>
+    </div>
+  </header>
+
+  <main class="app-interface">
+    <section class="hero">
+      <div class="eyebrow"><span></span> IMMERSIVE RESPONSIVE ASSISTANT</div>
+      <h1 id="heroTitle">Good evening, <em>Commander.</em></h1>
+      <p id="heroSub">IRA is listening. Ask anything, explore knowledge, or take control.</p>
+    </section>
+
+    <section id="orbScene" class="scene active" aria-label="IRA Orb">
+      <div class="scene-caption left"><small>NEURAL CORE</small><b>LIQUID INTELLIGENCE</b><span><i></i> Voice reactive</span></div>
+      <div class="orb-wrap" id="orb">
+        <div class="orbit orbit-a"><i></i></div>
+        <div class="orbit orbit-b"><i></i></div>
+        <div class="orbit orbit-c"></div>
+        <div class="orb-glow"></div>
+        <div class="orb-body"><div class="orb-caustic"></div><div class="orb-shine"></div></div>
+        <div class="orb-core"></div>
+        <div class="orb-label"><span></span><b id="orbState">READY</b></div>
+      </div>
+      <div class="scene-caption right"><small>SYNAPTIC LINK</small><b>VOICE CHANNEL 01</b><span><i></i> Secure session</span></div>
+      <div class="orb-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </section>
+
+    <section id="personaScene" class="scene" aria-label="IRA Persona">
+      <div class="persona-data data-left"><small>EMOTION MATRIX</small><b>CALM · FOCUSED</b><i></i></div>
+      <div class="persona-data data-right"><small>VOICE PROFILE</small><b>AURELIA / NATURAL</b><i></i></div>
+      <div class="persona-halo"></div>
+      <div class="persona-frame">
+        <img src="assets/ira-avatar.png" alt="IRA anime persona" />
+        <div class="scanline"></div>
+        <div class="persona-tag"><small>ACTIVE PERSONA</small><strong>IRA // AURELIA</strong></div>
+      </div>
+    </section>
+
+    <section id="vrmScene" class="scene" aria-label="VRM Studio">
+      <div class="vrm-stage" id="dropZone">
+        <canvas id="vrmCanvas" aria-label="3D VRM avatar viewport"></canvas>
+        <div class="grid-floor"></div>
+        <div class="model-placeholder" id="modelPlaceholder">
+          <div class="head"></div><div class="torso"></div><div class="legs"></div>
+        </div>
+        <div class="upload-card" id="uploadCard">
+          <div class="upload-icon">⬡</div>
+          <h2>Load your avatar</h2>
+          <p>Drop a <b>.vrm</b> file here or choose one from your device.</p>
+          <label class="primary small">Choose VRM<input id="vrmInput" type="file" accept=".vrm,model/gltf-binary" hidden /></label>
+          <small>Processed locally · Never uploaded</small>
+          <span class="vrm-support">VRM 0.x and VRM 1.0 supported</span>
+        </div>
+        <div class="vrm-loading" id="vrmLoading"><i></i><b>PREPARING 3D ENGINE</b></div>
+        <div class="model-info" id="modelInfo"><span>MODEL LOADED</span><b id="modelName">avatar.vrm</b><small id="modelSize"></small></div>
+      </div>
+    </section>
+
+    <section class="response-panel" id="responsePanel">
+      <div class="speaker"><div class="speaker-ring">IA</div></div>
+      <div class="response-copy">
+        <span class="response-label">IRA <i>•</i> NOW</span>
+        <p id="responseText">Welcome back. My systems are online and ready when you are.</p>
+        <a id="sourceLink" target="_blank" rel="noreferrer"></a>
+      </div>
+      <button id="speakAgain" class="ghost-icon" title="Speak again">⌁</button>
+    </section>
+
+    <section class="voice-console" aria-label="Voice conversation controls">
+      <div class="voice-transcript" id="voiceTranscript">Tap the voice core and speak naturally</div>
+      <button type="button" class="voice-core" id="micBtn" aria-label="Start voice conversation">
+        <span class="voice-ripple ripple-one"></span><span class="voice-ripple ripple-two"></span>
+        <i class="mic-symbol"></i>
+      </button>
+      <div class="voice-state"><span id="voiceStateDot"></span><b id="voiceStateText">TAP TO SPEAK</b></div>
+      <p>Voice-only conversation · <button id="inlineLanguage" type="button">English (India)</button></p>
+    </section>
+
+    <section class="quick-actions">
+      <button data-prompt="What's in the news today?"><i class="cyan">⌁</i><span><b>Daily briefing</b><small>News, weather & schedule</small></span><em>›</em></button>
+      <button data-prompt="Explain quantum computing simply"><i class="violet">✦</i><span><b>Explore a topic</b><small>Learn with Wikipedia</small></span><em>›</em></button>
+      <button id="automationBtn"><i class="amber">⌘</i><span><b>Automation</b><small>Apps, browser & system</small></span><em>›</em></button>
+    </section>
+  </main>
+
+  <aside class="drawer" id="settingsDrawer" aria-hidden="true">
+    <div class="drawer-head"><div><small>IRA CONTROL CENTER</small><h2>Settings</h2></div><button class="close-drawer">×</button></div>
+    <div class="interface-setting">
+      <div class="setting-heading"><b>Interface mode</b><small>Choose how IRA appears</small></div>
+      <div class="mode-switch settings-modes" aria-label="Experience mode">
+        <button data-mode="orb" class="active"><span>◉</span> ORB</button>
+        <button data-mode="persona"><span>◇</span> PERSONA</button>
+        <button data-mode="vrm"><span>⬡</span> VRM</button>
+      </div>
+    </div>
+    <label class="setting"><span><b>Voice responses</b><small>Read IRA's answers aloud</small></span><input id="voiceToggle" type="checkbox" checked /><i></i></label>
+    <label class="setting"><span><b>Search Wikipedia</b><small>Use live knowledge results</small></span><input id="wikiToggle" type="checkbox" checked /><i></i></label>
+    <label class="setting"><span><b>Automatic language</b><small>Detect speech and answer in the same language</small></span><input id="autoLanguageToggle" type="checkbox" checked /><i></i></label>
+    <div class="name-setting">
+      <label for="userTitle"><b>How IRA addresses you</b><small>Replace “Commander” everywhere in the interface</small></label>
+      <div><input id="userTitle" maxlength="24" placeholder="Commander" /><button id="saveTitle" class="primary">Save</button></div>
+    </div>
+    <div class="select-row"><span><b>Language</b><small>Recognition, answers & voice</small></span><select id="language">
+      <option value="en-IN" data-wiki="en">English (India)</option><option value="en-US" data-wiki="en">English (US)</option>
+      <option value="hi-IN" data-wiki="hi">हिन्दी</option><option value="bn-IN" data-wiki="bn">বাংলা</option>
+      <option value="ta-IN" data-wiki="ta">தமிழ்</option><option value="te-IN" data-wiki="te">తెలుగు</option>
+      <option value="mr-IN" data-wiki="mr">मराठी</option><option value="gu-IN" data-wiki="gu">ગુજરાતી</option>
+      <option value="pa-IN" data-wiki="pa">ਪੰਜਾਬੀ</option><option value="ur-IN" data-wiki="ur">اردو</option>
+      <option value="es-ES" data-wiki="es">Español</option><option value="fr-FR" data-wiki="fr">Français</option>
+      <option value="de-DE" data-wiki="de">Deutsch</option><option value="pt-BR" data-wiki="pt">Português</option>
+      <option value="ar-SA" data-wiki="ar">العربية</option><option value="ja-JP" data-wiki="ja">日本語</option>
+      <option value="ko-KR" data-wiki="ko">한국어</option><option value="zh-CN" data-wiki="zh">中文</option>
+      <option value="ru-RU" data-wiki="ru">Русский</option>
+    </select></div>
+    <div class="select-row"><span><b>Background</b><small>Choose ambient environment</small></span><select id="backgroundStyle"><option value="nebula">Nebula grid</option><option value="midnight">Midnight minimal</option><option value="solar">Solar horizon</option></select></div>
+    <div class="accent-picker"><span>Core color</span><div><button data-color="#38e8ff" class="active" style="--c:#38e8ff"></button><button data-color="#9b72ff" style="--c:#9b72ff"></button><button data-color="#ffb13b" style="--c:#ffb13b"></button></div></div>
+  </aside>
+
+  <aside class="drawer wide" id="automationDrawer" aria-hidden="true">
+    <div class="drawer-head"><div><small>LOCAL AUTOMATION</small><h2>Command deck</h2></div><button class="close-drawer">×</button></div>
+    <p class="drawer-note">Every system action is previewed and requires your confirmation.</p>
+    <div class="command-grid">
+      <button data-action="open_browser" data-label="Open browser"><i>◎</i><b>Browser</b><small>Open default browser</small></button>
+      <button data-action="open_calculator" data-label="Open calculator"><i>＋</i><b>Calculator</b><small>Launch calculator</small></button>
+      <button data-action="open_whatsapp" data-label="Open WhatsApp Web"><i>◌</i><b>WhatsApp</b><small>Open web client</small></button>
+      <button data-action="close_active" data-label="Close active window"><i>×</i><b>Close window</b><small>Active app only</small></button>
+    </div>
+    <div class="bridge-status"><span></span><div><b>Desktop bridge</b><small id="bridgeText">Checking local connection…</small></div><button id="retryBridge">Retry</button></div>
+  </aside>
+
+  <div class="backdrop" id="backdrop"></div>
+  <div class="modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="warning-icon">!</div><small>AUTOMATION CONFIRMATION</small><h2 id="confirmTitle">Allow this action?</h2><p id="confirmCopy"></p>
+    <div><button id="cancelAction" class="secondary">Cancel</button><button id="confirmAction" class="primary">Confirm action</button></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>

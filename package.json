@@ -1,0 +1,15 @@
+{
+  "name": "ira-ai",
+  "private": true,
+  "version": "0.2.0",
+  "scripts": {
+    "bundle:vrm": "esbuild vrm-engine-src.js --bundle --format=esm --minify --outfile=vendor/vrm-engine.js"
+  },
+  "dependencies": {
+    "@pixiv/three-vrm": "^3.3.6",
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
