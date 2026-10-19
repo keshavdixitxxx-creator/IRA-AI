@@ -32,7 +32,9 @@ Without these variables, IRA automatically falls back to language-specific Wikip
 
 - Speech-to-text through the browser Web Speech API (best in Chrome/Edge)
 - Female text-to-speech using the browser's available system voices
-- Wikipedia-backed knowledge answers with source links
+- 82-entry offline English quick-answer knowledge file with 180 recognized phrases
+- Wikipedia-backed knowledge fallback with source links
+- Safe built-in arithmetic parser for addition, subtraction, multiplication, division, decimals, negatives, and parentheses
 - Chat history and quick actions
 - Three switchable visual experiences
 - Drag/drop VRM loader with model metadata and local-only handling

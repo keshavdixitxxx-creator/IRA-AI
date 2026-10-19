@@ -49,8 +49,11 @@
     </section>
 
     <section id="orbScene" class="scene active" aria-label="IRA Orb">
-      <div class="scene-caption left"><small>NEURAL CORE</small><b>LIQUID INTELLIGENCE</b><span><i></i> Voice reactive</span></div>
+      <div class="orb-interface-title"><small>IRA // NEURAL PRESENCE</small><b>LIQUID INTELLIGENCE</b></div>
+      <div class="scene-caption left"><small>CORE MATRIX</small><b>QUANTUM FLUID</b><span><i></i> Stable</span></div>
+      <div class="scene-caption right"><small>VOICE LINK</small><b>CHANNEL 01</b><span><i></i> Secure</span></div>
       <div class="orb-wrap" id="orb">
+        <canvas id="orbVisual" width="440" height="440" aria-hidden="true"></canvas>
         <div class="orbit orbit-a"><i></i></div>
         <div class="orbit orbit-b"><i></i></div>
         <div class="orbit orbit-c"></div>
@@ -94,6 +97,125 @@
       </div>
     </section>
 
+    <section id="monitorScene" class="scene monitor-scene jarvis-scene" aria-label="IRA Global Intelligence Monitor">
+      <div class="monitor-statusbar">
+        <div class="statusbar-brand"><span class="brand-mark"><i></i><i></i><i></i></span><b>IRA AI</b><small>GLOBAL MONITOR</small></div>
+        <div class="monitor-clock"><span id="monitorDate">--</span><b id="monitorTime">--:--:-- UTC</b></div>
+        <div class="statusbar-right">
+          <div class="jarvis-dials" aria-hidden="true">
+            <div class="jdial"><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="27"/><circle class="val" id="dialReactorArc" cx="32" cy="32" r="27"/></svg><b id="dialReactor">93%</b><small>PWR</small></div>
+            <div class="jdial"><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="27"/><circle class="val" id="dialSignalArc" cx="32" cy="32" r="27"/></svg><b id="dialSignal">88%</b><small>SIG</small></div>
+            <div class="jdial"><svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="27"/><circle class="val" id="dialSyncArc" cx="32" cy="32" r="27"/></svg><b id="dialSync">100%</b><small>SYNC</small></div>
+          </div>
+          <div class="threat-level"><small>GLOBAL SIGNAL</small><b id="signalLevel">ELEVATED</b></div>
+        </div>
+      </div>
+      <div class="monitor-grid">
+        <article class="intel-panel map-panel">
+          <header><div><small>GLOBAL SITUATION</small><b>REAL-TIME EVENT MAP</b></div><span id="eventCount">CONNECTING</span></header>
+          <div class="map-body">
+            <aside class="map-layers">
+              <small>LIVE LAYERS</small>
+              <label><input type="checkbox" checked data-layer="earthquake"><i class="orange"></i> EARTHQUAKES</label>
+              <label><input type="checkbox" checked data-layer="natural"><i class="red"></i> NATURAL EVENTS</label>
+              <label><input type="checkbox" checked data-layer="weather"><i class="cyan"></i> WEATHER</label>
+              <label><input type="checkbox" checked data-layer="system"><i class="violet"></i> NETWORK NODES</label>
+            </aside>
+            <div class="world-map" id="worldMap"><img src="/assets/world-map-dark.webp" alt="World situation map" loading="eager" decoding="async"/><div id="mapEvents"></div><div class="map-scan"></div><div class="map-zoom"><button type="button" data-zoom="in">+</button><button type="button" data-zoom="out">−</button><button type="button" data-zoom="reset">⌂</button></div></div>
+            <div class="jarvis-core" id="jarvisCore" aria-hidden="true">
+              <div class="jcore-ring ring-dash"></div>
+              <div class="jcore-ring ring-seg"></div>
+              <div class="jcore-ring ring-hex"></div>
+              <div class="jcore-ring ring-tick"></div>
+              <img class="jcore-brain" src="/assets/ira-cloud-brain.png" alt="" />
+              <div class="jcore-hub"></div>
+            </div>
+            <div class="map-legend"><span><i class="red"></i> Critical</span><span><i class="orange"></i> Elevated</span><span><i class="cyan"></i> Monitoring</span></div>
+          </div>
+        </article>
+
+        <article class="intel-panel ira-insights">
+          <header><div><small>IRA CLOUD BRAIN</small><b>LIVE ANALYSIS</b></div><span class="live-badge">LIVE</span></header>
+          <div class="insight-scroll" id="insightMessages">
+            <div class="insight-card"><small>WORLD BRIEF</small><p id="worldBrief">Connecting to real-time intelligence feeds…</p></div>
+            <div class="insight-card accent"><small>IRA STATUS</small><p>I am monitoring live signals. Ask me about any event, location, or headline.</p></div>
+          </div>
+          <form class="monitor-chat" id="monitorChatForm"><input id="monitorPrompt" autocomplete="off" placeholder="Ask IRA about the live situation…"/><button type="button" id="monitorMic" aria-label="Speak">⌁</button><button type="submit" aria-label="Send">➤</button></form>
+        </article>
+
+        <article class="intel-panel news-panel">
+          <header><div><small>LIVE NEWS</small><b>GLOBAL HEADLINES</b></div><span id="newsStatus">UPDATING</span></header>
+          <div class="headline-list" id="headlineList"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div>
+        </article>
+
+        <article class="intel-panel video-panel">
+          <header><div><small>LIVE BROADCAST</small><b>GLOBAL NEWS FEED</b></div><a id="videoWatchLink" href="https://www.youtube.com/@dwnews/live" target="_blank" rel="noreferrer">WATCH ↗</a></header>
+          <div class="video-body">
+            <iframe id="newsVideo" src="https://www.youtube-nocookie.com/embed/live_stream?channel=UCknLrEdhRCp1aegoMqRaCZg&amp;autoplay=0&amp;mute=1" title="Live global news broadcast" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+            <div class="video-scan"></div>
+          </div>
+        </article>
+
+        <article class="intel-panel signals-panel">
+          <header><div><small>LIVE SIGNALS</small><b>EARTH & WEATHER</b></div><span>REAL TIME</span></header>
+          <div class="signal-cards">
+            <div><small>LOCAL WEATHER</small><b id="weatherValue">--°</b><span id="weatherDetail">Ghaziabad · connecting</span></div>
+            <div><small>SEISMIC EVENTS</small><b id="quakeValue">--</b><span>Past 24 hours</span></div>
+            <div><small>UTC NETWORK</small><b id="networkValue">SYNC</b><span>Public data feeds</span></div>
+
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <section id="cockpitScene" class="scene cockpit-scene" aria-label="IRA Starship Cockpit">
+      <div class="cockpit-statusbar">
+        <div class="statusbar-brand cockpit-brand"><span class="brand-mark"><i></i><i></i><i></i></span><b>IRA AI</b><small>STARSHIP COCKPIT</small></div>
+        <div class="cockpit-clock"><span id="cockpitDate">--</span><b id="cockpitTime">--:--:-- UTC</b></div>
+        <div class="hull-status"><small>HULL INTEGRITY</small><b id="hullValue">100%</b></div>
+      </div>
+      <div class="cockpit-grid">
+        <aside class="cockpit-panel telemetry-left">
+          <header><small>SHIP SYSTEMS</small><b>POWER & LIFE SUPPORT</b></header>
+          <div class="gauge"><span>REACTOR CORE</span><div class="bar"><i id="gaugeReactor" style="width:93%"></i></div><b>93%</b></div>
+          <div class="gauge"><span>SHIELD ARRAY</span><div class="bar"><i id="gaugeShield" style="width:81%"></i></div><b>81%</b></div>
+          <div class="gauge"><span>LIFE SUPPORT</span><div class="bar"><i id="gaugeLife" style="width:100%"></i></div><b>100%</b></div>
+          <div class="gauge"><span>THRUSTERS</span><div class="bar"><i id="gaugeThrust" style="width:66%"></i></div><b>66%</b></div>
+          <div class="cockpit-quick">
+            <small>QUICK OPS</small>
+            <button data-cockpit-prompt="Run a full ship diagnostics scan">⌁ Diagnostics</button>
+            <button data-cockpit-prompt="Scan nearby space for signals">◎ Scan signals</button>
+            <button data-cockpit-prompt="Plot a course and brief me">✦ Plot course</button>
+          </div>
+        </aside>
+
+        <div class="cockpit-viewport" id="cockpitViewport">
+          <canvas id="cockpitCanvas" aria-hidden="true"></canvas>
+          <div class="hud-starfield" aria-hidden="true"></div>
+          <div class="hud-ladder" aria-hidden="true"></div>
+          <div class="hud-ring hud-ring-outer"></div>
+          <div class="hud-ring hud-ring-inner"></div>
+          <img class="hud-brain" src="/assets/ira-cloud-brain.png" alt="IRA cloud brain core" />
+          <div class="hud-compass" id="hudCompass"></div>
+          <div class="hud-reticle"><i></i><i></i><i></i><i></i><em></em></div>
+          <div class="hud-corner tl"></div><div class="hud-corner tr"></div><div class="hud-corner bl"></div><div class="hud-corner br"></div>
+          <div class="hud-readout left"><small>VELOCITY</small><b id="cockpitVelocity">21,400<i>km/h</i></b></div>
+          <div class="hud-readout right"><small>ALTITUDE</small><b id="cockpitAltitude">308<i>km</i></b></div>
+          <div class="hud-readout bottom"><small>HEADING</small><b id="cockpitHeading">047°</b></div>
+          <div class="hud-label"><span></span><b id="cockpitState">NAV LOCKED</b></div>
+        </div>
+
+        <aside class="cockpit-panel comms-right">
+          <header><small>IRA COMMS LOG</small><span class="live-badge">LIVE</span></header>
+          <div class="comms-scroll" id="cockpitLog">
+            <div class="comms-line sys"><small>SYS</small><p>All systems nominal. Awaiting your command, <span id="cockpitTitle">Commander</span>.</p></div>
+          </div>
+          <form class="cockpit-chat" id="cockpitChatForm"><input id="cockpitPrompt" autocomplete="off" placeholder="Transmit a command to IRA…"/><button type="button" id="cockpitMic" aria-label="Speak">⌁</button><button type="submit" aria-label="Send">➤</button></form>
+        </aside>
+      </div>
+    </section>
+
     <section class="response-panel" id="responsePanel">
       <div class="speaker"><div class="speaker-ring">IA</div></div>
       <div class="response-copy">
@@ -103,6 +225,12 @@
       </div>
       <button id="speakAgain" class="ghost-icon" title="Speak again">⌁</button>
     </section>
+
+    <form class="text-chat" id="textChatForm" aria-label="Message IRA">
+      <input id="textPrompt" type="text" autocomplete="off" placeholder="Ask IRA anything…" aria-label="Type your message to IRA" />
+      <button type="button" class="text-mic" id="textMicBtn" aria-label="Speak to IRA"><i></i></button>
+      <button type="submit" class="text-send" aria-label="Send message">➤</button>
+    </form>
 
     <section class="voice-console" aria-label="Voice conversation controls">
       <div class="voice-transcript" id="voiceTranscript">Tap the voice core and speak naturally</div>
@@ -129,6 +257,8 @@
         <button data-mode="orb" class="active"><span>◉</span> ORB</button>
         <button data-mode="persona"><span>◇</span> PERSONA</button>
         <button data-mode="vrm"><span>⬡</span> VRM</button>
+        <button data-mode="monitor"><span>▦</span> MONITOR</button>
+        <button data-mode="cockpit"><span>☄</span> COCKPIT</button>
       </div>
     </div>
     <label class="setting"><span><b>Voice responses</b><small>Read IRA's answers aloud</small></span><input id="voiceToggle" type="checkbox" checked /><i></i></label>

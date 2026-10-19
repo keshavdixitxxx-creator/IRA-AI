@@ -11,6 +11,8 @@ from __future__ import annotations
 import json
 import mimetypes
 import os
+import time
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.request import Request, urlopen
@@ -30,6 +32,62 @@ LANGUAGE_NAMES = {
     "pt": "Portuguese", "ar": "Arabic", "ja": "Japanese", "ko": "Korean",
     "zh": "Chinese", "ru": "Russian",
 }
+REALTIME_CACHE: dict = {"at": 0.0, "data": None}
+
+def fetch_bytes(url: str, timeout: int = 12) -> bytes:
+    req = Request(url, headers={"User-Agent": "IRA-AI-Monitor/1.0"})
+    with urlopen(req, timeout=timeout) as response:
+        return response.read()
+
+def get_realtime_data() -> dict:
+    """Aggregate public live feeds, cached to be respectful of providers."""
+    now = time.time()
+    if REALTIME_CACHE["data"] and now - REALTIME_CACHE["at"] < 120:
+        return REALTIME_CACHE["data"]
+    result = {"updated": int(now), "weather": None, "earthquakes": [], "naturalEvents": [], "headlines": []}
+    try:
+        weather = json.loads(fetch_bytes("https://api.open-meteo.com/v1/forecast?latitude=28.6692&longitude=77.4538&current=temperature_2m,wind_speed_10m,weather_code&timezone=auto"))
+        current = weather.get("current", {})
+        result["weather"] = {"temperature": current.get("temperature_2m", 0), "wind": current.get("wind_speed_10m", 0), "code": current.get("weather_code")}
+    except Exception as exc:
+        print("[IRA realtime] weather:", exc)
+    try:
+        quakes = json.loads(fetch_bytes("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson"))
+        for feature in quakes.get("features", [])[:120]:
+            coordinates = feature.get("geometry", {}).get("coordinates", [0, 0])
+            props = feature.get("properties", {})
+            result["earthquakes"].append({"title": props.get("title", "Seismic event"), "lat": coordinates[1], "lon": coordinates[0], "mag": props.get("mag"), "time": props.get("time"), "url": props.get("url")})
+    except Exception as exc:
+        print("[IRA realtime] earthquakes:", exc)
+    try:
+        eonet = json.loads(fetch_bytes("https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=120"))
+        for event in eonet.get("events", []):
+            geometries = event.get("geometry", [])
+            if not geometries:
+                continue
+            coordinates = geometries[-1].get("coordinates", [])
+            if not (isinstance(coordinates, list) and len(coordinates) >= 2 and isinstance(coordinates[0], (int, float))):
+                continue
+            categories = event.get("categories", [])
+            result["naturalEvents"].append({
+                "title": event.get("title", "Natural event"),
+                "lat": coordinates[1], "lon": coordinates[0],
+                "category": categories[0].get("title", "Natural event") if categories else "Natural event",
+                "date": geometries[-1].get("date", ""),
+                "url": (event.get("sources") or [{}])[0].get("url", "")
+            })
+    except Exception as exc:
+        print("[IRA realtime] NASA EONET:", exc)
+    try:
+        root = ET.fromstring(fetch_bytes("https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en"))
+        for item in root.findall("./channel/item")[:20]:
+            raw_title = item.findtext("title", "Live headline")
+            source = item.findtext("source", "Google News")
+            result["headlines"].append({"title": raw_title, "url": item.findtext("link", "#"), "source": source, "published": item.findtext("pubDate", "")})
+    except Exception as exc:
+        print("[IRA realtime] headlines:", exc)
+    REALTIME_CACHE.update(at=now, data=result)
+    return result
 
 class Handler(BaseHTTPRequestHandler):
     def send_json(self, data: dict, status: int = 200) -> None:
@@ -43,6 +101,11 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         if self.path == "/api/health":
             return self.send_json({"ok": True, "aiConfigured": bool(ENDPOINT and API_KEY)})
+        if self.path == "/api/realtime":
+            try:
+                return self.send_json(get_realtime_data())
+            except Exception as exc:
+                return self.send_json({"error": str(exc)}, 502)
         clean = self.path.split("?", 1)[0].lstrip("/") or "index.html"
         target = (ROOT / clean).resolve()
         if ROOT not in target.parents and target != ROOT:
@@ -54,6 +117,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+        self.send_header("Pragma", "no-cache")
         self.end_headers()
         self.wfile.write(data)
 
