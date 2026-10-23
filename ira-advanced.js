@@ -1036,7 +1036,11 @@
     iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
     iframe.loading = 'lazy';
     iframe.referrerPolicy = 'no-referrer';
-    iframe.addEventListener('error', () => { iframe.remove(); });
+    const fallback = () => {
+      iframe.remove();
+      frame.innerHTML = `<div class="fallback">STREAM BLOCKED BY HOST<br>USE “OPEN ↗” FOR THIS FEED</div>`;
+    };
+    iframe.addEventListener('error', fallback);
     frame.textContent = '';
     frame.append(iframe);
     GE.cameras.set(id, true);
