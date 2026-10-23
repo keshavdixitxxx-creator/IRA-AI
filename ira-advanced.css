@@ -1,0 +1,451 @@
+/* ============================================================================
+   IRA ADVANCED INTERFACES
+   UI 4 — HOLO DECK   : holographic data-wall HUD (reference: teal panel HUD)
+   UI 5 — GOD'S EYE   : Argus / Atlas style global surveillance & command grid
+   Loaded after styles.css. Everything is scoped to body.mode-holo or
+   body.mode-godseye so the original five interfaces are untouched.
+   ========================================================================== */
+
+/* ============================== shared =================================== */
+.holo-scene, .godseye-scene { display: none }
+/* styles.css gives every .scene height:330px + place-items:center — both would
+   break a full-screen grid, so neutralise them for the two advanced scenes. */
+body.mode-holo .holo-scene.active, .holo-scene.active,
+body.mode-godseye .godseye-scene.active, .godseye-scene.active {
+  height: auto;
+  width: auto;
+  place-items: stretch;
+}
+
+body.mode-holo, body.mode-godseye { overflow: hidden; background: #02090c }
+body.mode-holo .ambient-bg,
+body.mode-godseye .ambient-bg { background: radial-gradient(ellipse at 50% 40%, #06222a, #02090c 62%) !important }
+body.mode-holo .aurora, body.mode-holo .horizon-grid, body.mode-holo .radar-ring,
+body.mode-holo #starfield,
+body.mode-godseye .aurora, body.mode-godseye .horizon-grid, body.mode-godseye .radar-ring,
+body.mode-godseye #starfield { opacity: .05 }
+body.mode-holo main, body.mode-godseye main { width: 100%; padding: 0; }
+body.mode-holo .hero, body.mode-holo .response-panel, body.mode-holo .text-chat,
+body.mode-holo .voice-console, body.mode-holo .quick-actions,
+body.mode-godseye .hero, body.mode-godseye .response-panel, body.mode-godseye .text-chat,
+body.mode-godseye .voice-console, body.mode-godseye .quick-actions { display: none !important }
+
+/* settings mode grid now holds seven interfaces */
+.settings-modes { grid-template-columns: repeat(4, 1fr) !important }
+
+/* small helper typography */
+.holo-scene, .godseye-scene { font-family: 'Space Grotesk', Inter, sans-serif }
+.holo-scene small, .godseye-scene small { letter-spacing: 1.4px }
+
+/* ============================================================================
+   UI 4 — HOLO DECK
+   ========================================================================== */
+body.mode-holo .holo-scene.active,
+.holo-scene.active {
+  position: fixed;
+  inset: 76px 0 0;
+  display: grid;
+  grid-template-rows: 58px minmax(0, 1fr) 86px;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  z-index: 3;
+  background:
+    radial-gradient(ellipse at 50% 46%, rgba(34, 150, 168, .12), transparent 58%),
+    repeating-linear-gradient(0deg, rgba(84, 235, 255, .045) 0 1px, transparent 1px 46px),
+    repeating-linear-gradient(90deg, rgba(84, 235, 255, .045) 0 1px, transparent 1px 46px),
+    linear-gradient(165deg, #04161b, #020b0f 55%, #041318);
+  overflow: hidden;
+}
+.holo-scene::before { /* vignette + faint world silhouette like the reference */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 45%, transparent 40%, rgba(0, 0, 0, .55) 100%),
+    url('/assets/world-map-dark.webp') center 52% / 92% auto no-repeat;
+  opacity: .3; mix-blend-mode: screen; filter: saturate(.4) brightness(.6);
+}
+
+/* ---------- header ---------- */
+.holo-head {
+  position: relative; z-index: 2; display: grid;
+  grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px;
+  border: 1px solid rgba(104, 234, 255, .22);
+  background: linear-gradient(180deg, rgba(12, 52, 62, .82), rgba(4, 24, 30, .82));
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  padding: 0 16px;
+}
+.holo-head .hh-left { display: flex; align-items: center; gap: 10px; min-width: 0 }
+.holo-head .hh-left b { font-size: 10px; letter-spacing: 2.6px; color: #c9f9ff }
+.holo-head .hh-left small { font-size: 7px; color: #4f9fb0; letter-spacing: 1.8px; white-space: nowrap }
+.holo-head .hh-left .hh-led { width: 7px; height: 7px; border-radius: 50%; background: #5ef2d2; box-shadow: 0 0 10px #5ef2d2; animation: holoPulse 2s infinite }
+.hh-gauges { display: flex; align-items: center; gap: 26px }
+.holo-arc { position: relative; width: 92px; height: 34px; display: flex; align-items: center; justify-content: center }
+.holo-arc svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible }
+.holo-arc .track { fill: none; stroke: rgba(120, 224, 240, .16); stroke-width: 5 }
+.holo-arc .val { fill: none; stroke: #6ff0ff; stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 4px rgba(111, 240, 255, .8)); transition: stroke-dashoffset .8s ease }
+.holo-arc span { position: relative; font-size: 11px; letter-spacing: 1.6px; color: #e8fdff; padding-top: 4px }
+.holo-arc em { position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: 6px; letter-spacing: 1.6px; color: #4f97a8 }
+.hh-dials { display: flex; justify-content: flex-end; gap: 12px }
+.holo-dial { position: relative; width: 34px; height: 34px; display: grid; place-items: center }
+.holo-dial svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg) }
+.holo-dial .track { fill: none; stroke: rgba(120, 224, 240, .18); stroke-width: 3 }
+.holo-dial .val { fill: none; stroke: #6ff0ff; stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset .8s ease }
+.holo-dial b { font-size: 7px; color: #d8fbff; letter-spacing: .5px }
+.holo-dial:after { content: ""; position: absolute; inset: -4px; border: 1px dashed rgba(120, 224, 240, .2); border-radius: 50%; animation: holoSpin 24s linear infinite }
+
+/* ---------- body columns ---------- */
+.holo-body { position: relative; z-index: 2; display: grid; grid-template-columns: 250px minmax(0, 1fr) 286px; gap: 10px; min-height: 0 }
+.holo-col { display: flex; flex-direction: column; gap: 8px; min-height: 0 }
+
+.holo-panel {
+  position: relative; flex: 1 1 0; min-height: 0; display: flex; flex-direction: column;
+  border: 1px solid rgba(104, 234, 255, .26);
+  background: linear-gradient(160deg, rgba(19, 74, 86, .5), rgba(5, 28, 34, .62));
+  clip-path: polygon(0 12px, 12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+  box-shadow: inset 0 0 0 1px rgba(120, 240, 255, .05), inset 0 18px 34px -22px rgba(120, 240, 255, .5);
+  overflow: hidden;
+}
+.holo-panel:after { /* scanning sheen */
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 40%;
+  background: linear-gradient(180deg, rgba(140, 248, 255, .07), transparent);
+  pointer-events: none;
+}
+.holo-panel > header {
+  flex: 0 0 auto; height: 30px; display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 0 10px; border-bottom: 1px solid rgba(104, 234, 255, .18);
+  background: rgba(8, 40, 48, .72);
+}
+.holo-panel > header b { font-size: 7.5px; letter-spacing: 1.8px; color: #a8f2ff; font-weight: 600 }
+.holo-panel > header small { font-size: 6px; color: #4b93a4; letter-spacing: 1.5px }
+.holo-panel > header .tag { font-size: 6px; padding: 3px 5px; border: 1px solid rgba(104, 234, 255, .3); color: #7fe6f6; letter-spacing: 1.2px }
+.holo-panel > header .tag.live { color: #74ffd0; border-color: rgba(116, 255, 208, .35) }
+.holo-panel > header .tag.sim { color: #ffcf7a; border-color: rgba(255, 207, 122, .32) }
+.holo-panel-body { flex: 1; min-height: 0; overflow: auto; padding: 9px 10px; scrollbar-width: thin; scrollbar-color: rgba(104, 234, 255, .3) transparent }
+.holo-panel-body::-webkit-scrollbar { width: 4px }
+.holo-panel-body::-webkit-scrollbar-thumb { background: rgba(104, 234, 255, .3) }
+
+.holo-metric { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 0; border-bottom: 1px dashed rgba(104, 234, 255, .12) }
+.holo-metric:last-child { border-bottom: 0 }
+.holo-metric span { font-size: 7px; letter-spacing: 1.3px; color: #74b6c4 }
+.holo-metric b { font-size: 10px; color: #e6fdff; letter-spacing: .8px }
+.holo-metric b i { font-style: normal; font-size: 6px; color: #4f97a8; margin-left: 3px }
+.holo-bar { position: relative; height: 4px; flex: 1; max-width: 92px; background: rgba(104, 234, 255, .12); overflow: hidden }
+.holo-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #2fd5ef, #9af8ff); box-shadow: 0 0 8px rgba(90, 235, 255, .7); transition: width .6s ease }
+
+.holo-list { display: flex; flex-direction: column; gap: 5px }
+.holo-item {
+  position: relative; display: block; width: 100%; text-align: left; border: 1px solid rgba(104, 234, 255, .14);
+  background: rgba(9, 44, 52, .45); padding: 6px 7px; color: #cfeff6; cursor: pointer;
+  clip-path: polygon(0 6px, 6px 0, 100% 0, 100% 100%, 0 100%);
+  transition: background .18s, border-color .18s, transform .18s;
+}
+.holo-item:hover { background: rgba(24, 96, 110, .55); border-color: rgba(104, 234, 255, .45); transform: translateX(2px) }
+.holo-item small { display: block; font-size: 5.5px; color: #4f9fb0; letter-spacing: 1.2px; margin-bottom: 2px }
+.holo-item b { display: block; font-size: 8px; font-weight: 500; line-height: 1.35; color: #dffbff;
+  overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical }
+.holo-item .dot { position: absolute; right: 6px; top: 6px; width: 4px; height: 4px; border-radius: 50%; background: #5ef2d2; box-shadow: 0 0 6px #5ef2d2 }
+
+.holo-log { display: flex; flex-direction: column; gap: 4px; font-size: 7px; line-height: 1.5; color: #78c4d2 }
+.holo-log div { display: flex; gap: 6px; border-bottom: 1px dotted rgba(104, 234, 255, .1); padding-bottom: 3px }
+.holo-log time { color: #3f8496; flex: 0 0 auto }
+.holo-log span { color: #b6e9f3 }
+
+/* ---------- centre stage ---------- */
+.holo-stage { position: relative; overflow: hidden; min-height: 0;
+  border: 1px solid rgba(104, 234, 255, .18);
+  background: radial-gradient(circle at 50% 50%, rgba(30, 130, 150, .18), rgba(2, 12, 16, .7) 62%);
+  clip-path: polygon(0 18px, 18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px));
+}
+.holo-stage canvas { position: absolute; inset: 0; width: 100%; height: 100% }
+.holo-stage .holo-scan { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent, rgba(120, 246, 255, .06), transparent); height: 22%; animation: holoScan 9s linear infinite }
+.holo-brain { position: absolute; left: 50%; top: 50%; width: 116px; height: 116px; transform: translate(-50%, -50%); object-fit: contain; filter: drop-shadow(0 0 18px rgba(94, 238, 255, .8)) hue-rotate(155deg) saturate(1.4); animation: corePulse 3.6s ease-in-out infinite; pointer-events: none }
+.holo-brain.speaking { animation-duration: 1.1s }
+.holo-core-ring { position: absolute; left: 50%; top: 50%; width: 190px; height: 190px; transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid rgba(104, 234, 255, .35); animation: holoSpin 26s linear infinite; pointer-events: none }
+.holo-core-ring:after { content: ""; position: absolute; inset: 14px; border-radius: 50%; border: 1px dashed rgba(104, 234, 255, .22) }
+.holo-caption { position: absolute; display: flex; flex-direction: column; gap: 3px; pointer-events: none }
+.holo-caption small { font-size: 6px; color: #4f9fb0; letter-spacing: 2px }
+.holo-caption b { font-size: 9px; color: #cdf6ff; letter-spacing: 1.2px; font-weight: 500 }
+.holo-caption.tl { left: 16px; top: 14px }
+.holo-caption.tr { right: 16px; top: 14px; text-align: right; align-items: flex-end }
+.holo-caption.bl { left: 16px; bottom: 14px }
+.holo-caption.br { right: 16px; bottom: 14px; text-align: right; align-items: flex-end }
+.holo-answer {
+  position: absolute; left: 16px; right: 16px; bottom: 44px; max-height: 34%;
+  border: 1px solid rgba(104, 234, 255, .3); background: rgba(4, 22, 27, .82);
+  backdrop-filter: blur(9px); padding: 9px 11px; overflow: auto;
+  clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+}
+.holo-answer[hidden] { display: none }
+.holo-answer small { display: block; font-size: 6px; color: #6ff0ff; letter-spacing: 1.8px; margin-bottom: 5px }
+.holo-answer p { margin: 0; font-size: 10px; line-height: 1.6; color: #d3f4fb; white-space: pre-line }
+.holo-answer button { margin-top: 6px; border: 1px solid rgba(104, 234, 255, .3); background: rgba(104, 234, 255, .08); color: #9deefb; font-size: 6px; letter-spacing: 1.4px; padding: 4px 7px }
+.holo-answer a { color: #7fe6f6; font-size: 7px; letter-spacing: 1px; text-decoration: none; border-bottom: 1px dotted rgba(127, 230, 246, .5) }
+
+/* ---------- footer ---------- */
+.holo-foot { position: relative; z-index: 2; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(220px, 340px); align-items: center; gap: 12px;
+  border: 1px solid rgba(104, 234, 255, .2); background: linear-gradient(180deg, rgba(8, 40, 48, .8), rgba(3, 18, 23, .8));
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+  padding: 0 16px;
+}
+.holo-hex { width: 44px; height: 44px; border: 1px solid rgba(104, 234, 255, .5); background: rgba(16, 82, 94, .5); color: #a8f2ff; font-size: 15px; clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%) }
+.holo-hex:hover { background: rgba(30, 130, 150, .7); box-shadow: 0 0 18px rgba(104, 234, 255, .4) }
+.holo-rings { display: flex; align-items: center; gap: 10px; justify-content: flex-start; flex-wrap: wrap }
+.holo-ring { position: relative; width: 40px; height: 40px; display: grid; place-items: center }
+.holo-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg) }
+.holo-ring .track { fill: none; stroke: rgba(104, 234, 255, .14); stroke-width: 4 }
+.holo-ring .val { fill: none; stroke: #6ff0ff; stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 3px rgba(111, 240, 255, .7)); transition: stroke-dashoffset .7s ease }
+.holo-ring b { font-size: 7px; color: #d6f9ff }
+.holo-ring em { position: absolute; bottom: -6px; font-style: normal; font-size: 5px; letter-spacing: 1.2px; color: #438b9c }
+.holo-command { display: flex; align-items: center; gap: 6px; border: 1px solid rgba(104, 234, 255, .28); background: rgba(4, 26, 32, .8); padding: 4px 4px 4px 10px }
+.holo-command input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: #e6fdff; font-size: 9px; letter-spacing: .4px }
+.holo-command input::placeholder { color: #4b93a4; letter-spacing: 1.4px; font-size: 7px }
+.holo-command button { width: 30px; height: 30px; border: 0; background: rgba(104, 234, 255, .14); color: #b8f4ff; font-size: 12px }
+.holo-command button:hover { background: rgba(104, 234, 255, .3) }
+
+@keyframes holoSpin { to { transform: rotate(360deg) } }
+@keyframes holoPulse { 0%, 100% { opacity: 1 } 50% { opacity: .25 } }
+@keyframes holoScan { 0% { transform: translateY(-30%) } 100% { transform: translateY(460%) } }
+
+/* ============================================================================
+   UI 5 — GOD'S EYE  (Argus / Atlas global command grid)
+   ========================================================================== */
+body.mode-godseye .godseye-scene.active,
+.godseye-scene.active {
+  position: fixed; inset: 76px 0 0; z-index: 3;
+  display: grid;
+  grid-template-columns: 206px minmax(0, 1fr) 342px;
+  grid-template-rows: 42px minmax(0, 1fr) 34px;
+  gap: 6px; padding: 8px 10px 10px;
+  background:
+    radial-gradient(ellipse at 45% 42%, rgba(24, 120, 138, .16), transparent 62%),
+    repeating-linear-gradient(0deg, rgba(84, 235, 255, .028) 0 1px, transparent 1px 60px),
+    repeating-linear-gradient(90deg, rgba(84, 235, 255, .028) 0 1px, transparent 1px 60px),
+    #03090d;
+  overflow: hidden;
+}
+.ge-topbar { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 14px;
+  border: 1px solid rgba(88, 224, 246, .2); background: linear-gradient(180deg, rgba(7, 30, 36, .92), rgba(4, 17, 21, .92));
+  padding: 0 14px; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px)); }
+.ge-topbar .ge-brand { display: flex; align-items: center; gap: 9px }
+.ge-topbar .ge-brand b { font-size: 9.5px; letter-spacing: 2.6px; color: #c9f9ff }
+.ge-topbar .ge-brand small { font-size: 6.5px; letter-spacing: 1.6px; color: #4f9fb0 }
+.ge-clock { display: flex; align-items: center; gap: 12px; font-size: 8px; letter-spacing: 1.4px; color: #8fd7e4 }
+.ge-clock b { color: #e2fbff; font-size: 10px; letter-spacing: 1.8px }
+.ge-chips { display: flex; align-items: center; gap: 7px; justify-content: flex-end; flex-wrap: wrap }
+.ge-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid rgba(88, 224, 246, .22); padding: 4px 7px; font-size: 6px; letter-spacing: 1.3px; color: #93d8e6; background: rgba(9, 40, 47, .6) }
+.ge-chip i { width: 5px; height: 5px; border-radius: 50%; background: #6ff0ff; box-shadow: 0 0 7px #6ff0ff }
+.ge-chip.warn { color: #ffd07a; border-color: rgba(255, 208, 122, .3) }
+.ge-chip.warn i { background: #ffd07a; box-shadow: 0 0 7px #ffd07a }
+.ge-chip.bad { color: #ff8f96; border-color: rgba(255, 143, 150, .3) }
+.ge-chip.bad i { background: #ff8f96; box-shadow: 0 0 7px #ff8f96 }
+
+/* ---------- left rail ---------- */
+.ge-rail { display: flex; flex-direction: column; gap: 6px; min-height: 0; border: 1px solid rgba(88, 224, 246, .18);
+  background: linear-gradient(180deg, rgba(6, 27, 33, .9), rgba(3, 14, 18, .9)); padding: 8px; overflow: auto }
+.ge-rail h3 { margin: 2px 2px 3px; font-size: 6px; letter-spacing: 1.9px; color: #4f9fb0; font-weight: 600 }
+.ge-module { display: flex; align-items: center; gap: 7px; border: 1px solid rgba(88, 224, 246, .14); background: rgba(8, 36, 43, .5);
+  color: #a9dbe6; padding: 7px 8px; font-size: 7.5px; letter-spacing: 1.3px; text-align: left; cursor: pointer; transition: .16s }
+.ge-module i { font-style: normal; font-size: 10px; color: #6ff0ff; width: 12px; text-align: center; opacity: .85 }
+.ge-module span { flex: 1 }
+.ge-module em { font-style: normal; font-size: 6px; color: #4f9fb0 }
+.ge-module:hover { background: rgba(18, 68, 80, .7); border-color: rgba(88, 224, 246, .38) }
+.ge-module.active { background: linear-gradient(90deg, rgba(40, 150, 170, .55), rgba(16, 62, 74, .5)); border-color: rgba(104, 234, 255, .6); color: #f0feff; box-shadow: inset 2px 0 0 #6ff0ff }
+.ge-layers { display: flex; flex-direction: column; gap: 4px }
+.ge-layer { display: flex; align-items: center; gap: 6px; font-size: 6.5px; letter-spacing: 1px; color: #a9dbe6; cursor: pointer; padding: 3px 2px }
+.ge-layer input { accent-color: #49e2f7; width: 10px; height: 10px }
+.ge-layer i { width: 6px; height: 6px; border-radius: 50%; display: inline-block }
+.ge-layer em { margin-left: auto; font-style: normal; font-size: 6px; color: #4f9fb0 }
+.ge-rail .ge-brain { margin-top: auto; border: 1px solid rgba(88, 224, 246, .18); padding: 7px 8px; background: rgba(6, 26, 32, .8) }
+.ge-rail .ge-brain small { display: block; font-size: 5.5px; color: #4f9fb0; letter-spacing: 1.6px; margin-bottom: 3px }
+.ge-rail .ge-brain b { font-size: 7px; letter-spacing: 1.2px; color: #74ffd0 }
+.ge-rail .ge-brain b.off { color: #ffd07a }
+.ge-rail .ge-brain p { margin: 5px 0 0; font-size: 6px; line-height: 1.5; color: #55929f }
+
+/* ---------- map ---------- */
+.ge-map { position: relative; overflow: hidden; min-height: 0;
+  border: 1px solid rgba(88, 224, 246, .26);
+  /* 100% 100% keeps the equirectangular pins aligned with the bitmap */
+  background: #040f14 url('/assets/world-map-dark.webp') center/100% 100% no-repeat;
+  touch-action: none; cursor: grab;
+}
+.ge-map:active { cursor: grabbing }
+.ge-map:after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background: radial-gradient(ellipse at 50% 48%, transparent 42%, rgba(1, 8, 12, .68) 100%),
+              repeating-linear-gradient(0deg, rgba(120, 240, 255, .05) 0 1px, transparent 1px 3px); }
+.ge-map > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; opacity: .5; filter: saturate(.35) brightness(.85) hue-rotate(150deg) }
+.ge-markers { position: absolute; inset: 0; transform-origin: center; transition: transform .16s ease-out; z-index: 3 }
+.ge-map .ge-scan { position: absolute; inset: 0; z-index: 2; pointer-events: none; width: 24%; background: linear-gradient(90deg, transparent, rgba(111, 240, 255, .09), transparent); animation: mapScan 8s linear infinite }
+.ge-map .ge-graticule { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .5;
+  background-image: linear-gradient(rgba(111, 240, 255, .16) 1px, transparent 1px), linear-gradient(90deg, rgba(111, 240, 255, .16) 1px, transparent 1px);
+  background-size: 8.333% 100%, 100% 16.666% }
+.ge-corner { position: absolute; width: 22px; height: 22px; border: 2px solid rgba(111, 240, 255, .5); z-index: 4; pointer-events: none }
+.ge-corner.tl { left: 8px; top: 8px; border-right: 0; border-bottom: 0 }
+.ge-corner.tr { right: 8px; top: 8px; border-left: 0; border-bottom: 0 }
+.ge-corner.bl { left: 8px; bottom: 8px; border-right: 0; border-top: 0 }
+.ge-corner.br { right: 8px; bottom: 8px; border-left: 0; border-top: 0 }
+.ge-scale { position: absolute; right: 14px; bottom: 12px; z-index: 5; font-size: 6px; letter-spacing: 1.2px; color: #7fc4d2; text-align: right; pointer-events: none }
+.ge-scale i { display: block; width: 78px; height: 5px; border: 1px solid rgba(111, 240, 255, .5); border-top: 0; margin-left: auto }
+.ge-coords { position: absolute; left: 14px; bottom: 12px; z-index: 5; font-size: 6.5px; letter-spacing: 1.4px; color: #7fc4d2; pointer-events: none }
+.ge-coords b { color: #ccf6ff; font-weight: 500 }
+.ge-cross { position: absolute; left: 50%; top: 50%; width: 1px; height: 1px; z-index: 4; pointer-events: none }
+.ge-cross i { position: absolute; background: rgba(111, 240, 255, .45) }
+.ge-cross i:nth-child(1) { width: 1px; height: 18px; left: 0; top: -40px }
+.ge-cross i:nth-child(2) { width: 1px; height: 18px; left: 0; top: 22px }
+.ge-cross i:nth-child(3) { width: 18px; height: 1px; top: 0; left: -40px }
+.ge-cross i:nth-child(4) { width: 18px; height: 1px; top: 0; left: 22px }
+.ge-cross em { position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border: 1px solid #6ff0ff; border-radius: 50% }
+.ge-zoom { position: absolute; right: 12px; top: 12px; z-index: 6; display: flex; flex-direction: column; gap: 3px }
+.ge-zoom button { width: 26px; height: 26px; border: 1px solid rgba(111, 240, 255, .3); background: rgba(4, 20, 26, .86); color: #b9eef8; font-size: 12px; padding: 0; backdrop-filter: blur(6px) }
+.ge-zoom button:hover { border-color: #6ff0ff; color: #fff }
+.ge-zoom .sim { font-size: 5.5px; letter-spacing: 1px; color: #ffd07a; border-color: rgba(255, 208, 122, .3); width: auto; padding: 0 4px }
+
+/* markers */
+.ge-marker { position: absolute; transform: translate(-50%, -50%); z-index: 3; border: 0; padding: 0; background: none; cursor: pointer }
+.ge-marker .nub { display: block; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor }
+.ge-marker .halo { position: absolute; inset: -5px; border: 1px solid currentColor; border-radius: 50%; opacity: .4; animation: gePing 2.4s ease-out infinite }
+.ge-marker.flight { color: #5fe6ff }
+.ge-marker.flight .nub { width: 0; height: 0; border-radius: 0; background: none; box-shadow: none;
+  border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 11px solid currentColor;
+  filter: drop-shadow(0 0 4px currentColor) }
+.ge-marker.flight .halo { display: none }
+.ge-marker.military { color: #ffb95e }
+.ge-marker.military .nub { border-radius: 1px; width: 6px; height: 6px; transform: rotate(45deg) }
+.ge-marker.earthquake { color: #ff8a5c }
+.ge-marker.natural { color: #ff5f7a }
+.ge-marker.news { color: #7ef0c8 }
+.ge-marker.traffic { color: #d7ff7a }
+.ge-marker.traffic.red { color: #ff6b6b }
+.ge-marker.traffic.amber { color: #ffc861 }
+.ge-marker.traffic.green { color: #6dfba9 }
+.ge-marker.camera { color: #b28bff }
+.ge-marker.orbit { color: #ffffff }
+.ge-marker.place { color: #6ff0ff }
+.ge-marker.system { color: #59c7ff }
+.ge-marker.selected .nub { transform: scale(1.6); box-shadow: 0 0 14px currentColor }
+.ge-marker.selected .halo { opacity: .9; animation-duration: 1.1s }
+.ge-marker .lbl { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: 6px;
+  letter-spacing: .8px; color: #d8fbff; background: rgba(2, 14, 18, .72); padding: 2px 4px; border-left: 1px solid currentColor; pointer-events: none; opacity: 0; transition: opacity .16s }
+.ge-marker:hover .lbl, .ge-marker.selected .lbl { opacity: 1 }
+.ge-layer-off { display: none !important }
+.ge-map.hide-flights .ge-marker.flight,
+.ge-map.hide-military .ge-marker.military,
+.ge-map.hide-earthquakes .ge-marker.earthquake,
+.ge-map.hide-natural .ge-marker.natural,
+.ge-map.hide-news .ge-marker.news,
+.ge-map.hide-traffic .ge-marker.traffic,
+.ge-map.hide-cameras .ge-marker.camera,
+.ge-map.hide-orbit .ge-marker.orbit,
+.ge-map.hide-system .ge-marker.system { display: none }
+
+/* ---------- right console ---------- */
+.ge-console { display: flex; flex-direction: column; min-height: 0; border: 1px solid rgba(88, 224, 246, .22);
+  background: linear-gradient(180deg, rgba(7, 30, 36, .94), rgba(4, 16, 20, .94)); }
+.ge-console-head { flex: 0 0 auto; height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px;
+  border-bottom: 1px solid rgba(88, 224, 246, .18); background: rgba(10, 42, 50, .7) }
+.ge-console-head b { font-size: 7px; letter-spacing: 1.8px; color: #a8f2ff }
+.ge-console-head small { font-size: 6px; letter-spacing: 1.4px; color: #4f9fb0 }
+.ge-search { flex: 0 0 auto; display: flex; gap: 5px; padding: 7px; border-bottom: 1px solid rgba(88, 224, 246, .12); background: rgba(5, 24, 30, .6) }
+.ge-search input { flex: 1; min-width: 0; border: 1px solid rgba(88, 224, 246, .2); background: rgba(3, 18, 23, .8); color: #e6fdff; padding: 6px 8px; font-size: 8px; outline: 0; letter-spacing: .4px }
+.ge-search input:focus { border-color: rgba(111, 240, 255, .55) }
+.ge-search input::placeholder { color: #438b9c; font-size: 6.5px; letter-spacing: 1px }
+.ge-search button { width: 28px; border: 1px solid rgba(88, 224, 246, .24); background: rgba(88, 224, 246, .12); color: #b8f4ff; font-size: 11px }
+.ge-search button:hover { background: rgba(88, 224, 246, .28) }
+.ge-console-body { flex: 1; min-height: 0; overflow: auto; padding: 8px; scrollbar-width: thin; scrollbar-color: rgba(104, 234, 255, .3) transparent }
+.ge-console-body::-webkit-scrollbar { width: 5px }
+.ge-console-body::-webkit-scrollbar-thumb { background: rgba(104, 234, 255, .3) }
+.ge-console-foot { flex: 0 0 auto; border-top: 1px solid rgba(88, 224, 246, .16); padding: 6px 8px; display: flex; gap: 5px; background: rgba(4, 20, 26, .8) }
+.ge-console-foot input { flex: 1; min-width: 0; border: 0; background: transparent; color: #e6fdff; font-size: 8px; outline: 0; padding: 4px }
+.ge-console-foot input::placeholder { color: #438b9c; font-size: 6.5px; letter-spacing: 1.2px }
+.ge-console-foot button { border: 1px solid rgba(88, 224, 246, .22); background: rgba(88, 224, 246, .1); color: #b8f4ff; width: 26px; font-size: 10px }
+.ge-console-foot button[type=submit] { background: rgba(88, 224, 246, .22) }
+
+.ge-card { border: 1px solid rgba(88, 224, 246, .16); background: rgba(6, 30, 36, .7); padding: 8px 9px; margin-bottom: 6px }
+.ge-card.accent { border-left: 2px solid #6ff0ff; background: rgba(12, 52, 60, .55) }
+.ge-card h4 { margin: 0 0 5px; font-size: 6px; letter-spacing: 1.7px; color: #6ff0ff; font-weight: 600; display: flex; justify-content: space-between; gap: 6px }
+.ge-card h4 span { color: #4f9fb0 }
+.ge-card p { margin: 0; font-size: 8.5px; line-height: 1.6; color: #cfeef6; white-space: pre-line }
+.ge-card .row { display: flex; justify-content: space-between; gap: 8px; font-size: 7px; padding: 3px 0; border-bottom: 1px dotted rgba(104, 234, 255, .12); color: #8fcfdd }
+.ge-card .row:last-child { border-bottom: 0 }
+.ge-card .row b { color: #e6fdff; font-weight: 500 }
+.ge-actions { display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap }
+.ge-actions button, .ge-actions a { flex: 1; min-width: 60px; text-align: center; border: 1px solid rgba(88, 224, 246, .28); background: rgba(88, 224, 246, .08);
+  color: #a8f2ff; font-size: 6px; letter-spacing: 1.2px; padding: 5px 4px; text-decoration: none; cursor: pointer }
+.ge-actions button:hover, .ge-actions a:hover { background: rgba(88, 224, 246, .22) }
+.ge-empty { padding: 14px 8px; text-align: center; font-size: 7px; line-height: 1.7; color: #55929f; letter-spacing: 1px }
+
+.ge-feed-item { display: flex; gap: 7px; align-items: flex-start; width: 100%; text-align: left; border: 0; border-bottom: 1px solid rgba(88, 224, 246, .1);
+  background: transparent; padding: 6px 3px; color: #cfeef6; cursor: pointer }
+.ge-feed-item:hover { background: rgba(88, 224, 246, .07) }
+.ge-feed-item i { flex: 0 0 auto; width: 5px; height: 5px; border-radius: 50%; margin-top: 4px; background: currentColor; box-shadow: 0 0 6px currentColor }
+.ge-feed-item span { min-width: 0 }
+.ge-feed-item small { display: block; font-size: 5.5px; letter-spacing: 1.1px; color: #4f9fb0; margin-bottom: 2px }
+.ge-feed-item b { display: block; font-size: 7.5px; font-weight: 500; line-height: 1.4; color: #dcf8ff;
+  overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical }
+.ge-feed-item em { font-style: normal; float: right; font-size: 5.5px; color: #4f9fb0 }
+
+.ge-cam { position: relative; margin-bottom: 7px; border: 1px solid rgba(88, 224, 246, .2); background: #02100f }
+.ge-cam header { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; font-size: 6px; letter-spacing: 1.1px; color: #a8f2ff; background: rgba(9, 40, 47, .9) }
+.ge-cam header .rec { color: #ff6b6b; animation: holoPulse 1.6s infinite }
+.ge-cam .frame { position: relative; aspect-ratio: 16 / 9; background: #031013; overflow: hidden }
+.ge-cam iframe, .ge-cam video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover }
+.ge-cam .fallback { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; font-size: 6px; line-height: 1.7; color: #55929f; letter-spacing: 1px; padding: 10px }
+.ge-cam footer { display: flex; justify-content: space-between; gap: 6px; padding: 4px 6px; font-size: 5.5px; letter-spacing: 1px; color: #4f9fb0 }
+.ge-cam footer a { color: #7fe6f6; text-decoration: none; border-bottom: 1px dotted rgba(127, 230, 246, .4) }
+.ge-cam .vision { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 4px 6px; border-top: 1px solid rgba(88, 224, 246, .12) }
+.ge-cam .vision div { font-size: 6px; letter-spacing: .8px; color: #8fcfdd }
+.ge-cam .vision b { display: block; color: #d8fbff; font-size: 8px }
+.ge-cam-link { width: 100%; border: 1px dashed rgba(88, 224, 246, .24); background: transparent; color: #7fc4d2; font-size: 6px; letter-spacing: 1.2px; padding: 6px; cursor: pointer }
+.ge-cam-link:hover { border-color: rgba(88, 224, 246, .5); color: #b8f4ff }
+
+/* ---------- ticker ---------- */
+.ge-ticker { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; overflow: hidden; border: 1px solid rgba(88, 224, 246, .18);
+  background: rgba(4, 20, 26, .9); padding: 0 10px }
+.ge-ticker > small { flex: 0 0 auto; font-size: 6px; letter-spacing: 1.8px; color: #6ff0ff; border-right: 1px solid rgba(88, 224, 246, .2); padding-right: 10px }
+.ge-ticker-track { display: flex; gap: 34px; white-space: nowrap; animation: geTicker 90s linear infinite; will-change: transform }
+.ge-ticker:hover .ge-ticker-track { animation-play-state: paused }
+.ge-ticker-track button { border: 0; background: none; color: #a9dbe6; font-size: 7px; letter-spacing: .6px; cursor: pointer; padding: 0 }
+.ge-ticker-track button:hover { color: #fff; text-shadow: 0 0 10px #6ff0ff }
+.ge-ticker-track b { color: #ffd07a; font-weight: 500; margin-right: 6px; font-size: 6px; letter-spacing: 1.2px }
+
+@keyframes gePing { 0% { transform: scale(.5); opacity: .8 } 100% { transform: scale(1.9); opacity: 0 } }
+@keyframes geTicker { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+
+/* quick switch buttons in the top bar */
+.top-actions .mode-jump { border: 1px solid rgba(104, 234, 255, .24); background: rgba(9, 40, 47, .6); color: #a8f2ff; font: 600 8px 'Space Grotesk', sans-serif;
+  letter-spacing: 1.4px; padding: 8px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer }
+.top-actions .mode-jump:hover { background: rgba(30, 120, 138, .55); border-color: rgba(104, 234, 255, .5) }
+.top-actions .mode-jump b { color: #6ff0ff; font-size: 9px }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1180px) {
+  .holo-body { grid-template-columns: 210px minmax(0, 1fr) 236px }
+  body.mode-godseye .godseye-scene.active, .godseye-scene.active { grid-template-columns: 176px minmax(0, 1fr) 300px }
+  .hh-gauges { gap: 14px }
+}
+@media (max-width: 720px) {
+  .top-actions .mode-jump { padding: 7px 8px; font-size: 7px }
+  .top-actions .mode-jump b { display: none }
+}
+@media (max-width: 980px) {
+  body.mode-holo, body.mode-godseye { overflow: auto }
+  body.mode-holo .holo-scene.active, .holo-scene.active {
+    position: absolute; inset: 76px 0 0; grid-template-rows: auto auto auto; height: auto; overflow: auto;
+  }
+  .holo-head { grid-template-columns: 1fr; gap: 6px; padding: 8px 12px; row-gap: 8px }
+  .hh-gauges, .hh-dials { justify-content: center }
+  .holo-body { grid-template-columns: 1fr; }
+  .holo-stage { min-height: 420px; order: -1 }
+  .holo-panel { min-height: 150px }
+  .holo-foot { grid-template-columns: auto 1fr; grid-auto-rows: auto; padding: 8px 12px; gap: 8px }
+  .holo-rings { grid-column: 1 / -1; justify-content: center }
+  .holo-command { grid-column: 1 / -1 }
+  body.mode-godseye .godseye-scene.active, .godseye-scene.active {
+    position: absolute; inset: 76px 0 0; display: flex; flex-direction: column; height: auto; overflow: auto;
+  }
+  .ge-topbar { grid-template-columns: 1fr auto; min-height: 42px }
+  .ge-topbar .ge-chips { display: none }
+  .ge-rail { flex-direction: row; flex-wrap: wrap; overflow: visible }
+  .ge-rail h3, .ge-rail .ge-layers, .ge-rail .ge-brain { display: none }
+  .ge-map { min-height: 440px }
+  .ge-console { min-height: 460px }
+  .ge-console-body { max-height: 400px }
+}
