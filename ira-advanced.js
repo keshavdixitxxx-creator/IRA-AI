@@ -25,6 +25,120 @@
   /* ------------------------------------------------------------------------
      Shared brain + intelligence client
      --------------------------------------------------------------------- */
+  /* Some hosting setups block the Python process from reaching the internet while
+     the visitor's browser can. These open, CORS-enabled feeds are therefore also
+     fetched directly from the browser when the server reports them offline. */
+  const DIRECT_FEEDS = {
+    weather: {
+      url: 'https://api.open-meteo.com/v1/forecast?latitude=28.6692&longitude=77.4538&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto',
+      parse(json) {
+        const current = json && json.current;
+        if (!current || current.temperature_2m == null) return null;
+        const daily = json.daily || {};
+        return {
+          label: 'Ghaziabad', lat: 28.6692, lon: 77.4538,
+          temperature: current.temperature_2m, feelsLike: current.apparent_temperature,
+          humidity: current.relative_humidity_2m, wind: current.wind_speed_10m,
+          code: current.weather_code,
+          max: (daily.temperature_2m_max || [null])[0], min: (daily.temperature_2m_min || [null])[0],
+        };
+      },
+    },
+    earthquakes: {
+      url: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson',
+      parse(json) {
+        const features = (json && json.features) || [];
+        const events = features.map((feature) => {
+          const coords = (feature.geometry && feature.geometry.coordinates) || [];
+          if (typeof coords[1] !== 'number') return null;
+          const props = feature.properties || {};
+          return { id: feature.id, title: props.place || 'Seismic event', lat: coords[1], lon: coords[0],
+            depth: coords[2], mag: props.mag, time: props.time, url: props.url };
+        }).filter(Boolean);
+        events.sort((a, b) => (b.mag || 0) - (a.mag || 0));
+        return events.length ? events : null;
+      },
+    },
+    naturalEvents: {
+      url: 'https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=80',
+      parse(json) {
+        const list = ((json && json.events) || []).map((event) => {
+          const geometry = (event.geometry || [])[event.geometry.length - 1];
+          const coords = (geometry && geometry.coordinates) || [];
+          if (typeof coords[1] !== 'number') return null;
+          const categories = event.categories || [];
+          return { id: event.id, title: event.title, lat: coords[1], lon: coords[0],
+            category: (categories[0] && categories[0].title) || 'Natural event',
+            date: geometry.date || '', url: ((event.sources || [])[0] || {}).url || '' };
+        }).filter(Boolean);
+        return list.length ? list : null;
+      },
+    },
+    iss: {
+      url: 'https://api.wheretheiss.at/v1/satellites/25544',
+      parse(json) {
+        if (!json || typeof json.latitude !== 'number') return null;
+        return { lat: json.latitude, lon: json.longitude, alt: json.altitude, velocity: json.velocity,
+          visibility: json.visibility, name: 'ISS (ZARYA)', timestamp: json.timestamp };
+      },
+    },
+    flights: {
+      url: 'https://api.airplanes.live/v2/point/28.6/77.2/250',
+      parse(json) {
+        const list = ((json && json.ac) || []).map((raw) => {
+          if (typeof raw.lat !== 'number') return null;
+          const altitude = typeof raw.alt_baro === 'number' ? raw.alt_baro : null;
+          return { hex: raw.hex, flight: (raw.flight || '').trim(), callsign: (raw.call || '').trim(),
+            lat: raw.lat, lon: raw.lon, alt: altitude, speed: raw.gs, track: raw.track,
+            type: raw.t, operator: raw.ownOp || '', registration: raw.r || '', military: false, kind: 'civil' };
+        }).filter(Boolean);
+        return list.length ? list : null;
+      },
+    },
+    military: {
+      url: 'https://api.airplanes.live/v2/mil',
+      parse(json) {
+        const list = ((json && json.ac) || []).map((raw) => {
+          if (typeof raw.lat !== 'number') return null;
+          return { hex: raw.hex, flight: (raw.flight || '').trim(), lat: raw.lat, lon: raw.lon,
+            alt: typeof raw.alt_baro === 'number' ? raw.alt_baro : null, speed: raw.gs,
+            track: raw.track, type: raw.t, operator: raw.ownOp || '', military: true, kind: 'military' };
+        }).filter(Boolean);
+        return list.length ? list : null;
+      },
+    },
+  };
+
+  async function fillFromBrowser(data) {
+    const tasks = Object.entries(DIRECT_FEEDS)
+      .filter(([key]) => data[key] && data[key].ok === false)
+      .map(async ([key, feed]) => {
+        try {
+          const response = await fetch(feed.url, { cache: 'no-store', signal: AbortSignal.timeout(7000) });
+          if (!response.ok) return;
+          const parsed = feed.parse(await response.json());
+          if (!parsed) return;
+          data[key] = { ok: true, data: parsed, error: '', ms: 0, source: 'direct browser fetch' };
+        } catch (error) {
+          /* CORS or offline — the server result stands */
+        }
+      });
+    if (!tasks.length) return data;
+    await Promise.allSettled(tasks);
+    const ok = ['weather', 'flights', 'military', 'earthquakes', 'naturalEvents'].filter((key) => data[key] && data[key].ok);
+    if (ok.length) {
+      const flights = blockData(data.flights, []).length;
+      const quakes = blockData(data.earthquakes, []).length;
+      const bits = [];
+      if (flights) bits.push(`${flights} aircraft tracked live`);
+      if (quakes) bits.push(`${quakes} seismic events in 24 h`);
+      const weather = blockData(data.weather, null);
+      if (weather) bits.push(`${weather.label} ${Math.round(weather.temperature)}°C`);
+      data.brief = bits.join('. ') || data.brief;
+    }
+    return data;
+  }
+
   const IRAIntel = {
     data: null,
     at: 0,
@@ -36,6 +150,7 @@
       if (this.pending) return this.pending;
       this.pending = fetch('/api/intel', { cache: 'no-store' })
         .then((response) => (response.ok ? response.json() : Promise.reject(new Error('intel ' + response.status))))
+        .then((data) => fillFromBrowser(data))
         .then((data) => {
           this.data = data;
           this.at = Date.now();
@@ -316,13 +431,15 @@
     if (link) link.textContent = 'NO UPLINK';
   }
 
-  function holoAnswer(text, source) {
+  function holoAnswer(text, source, engine) {
     const box = $('#holoAnswer');
     const body = $('#holoAnswerText');
     const link = $('#holoAnswerSource');
     if (!box || !body) return;
     box.hidden = false;
     body.textContent = text;
+    const tag = box.querySelector('small');
+    if (tag) tag.textContent = 'IRA // ANALYSIS' + (engine ? ' · ' + String(engine).toUpperCase() : '');
     if (link) {
       if (source) { link.hidden = false; link.href = source; } else { link.hidden = true; link.removeAttribute('href'); }
     }
@@ -339,7 +456,7 @@
     if (stateRef) stateRef.lastReply = `Analysing “${text}”…`;
     try {
       const result = await IRAIntel.ask(text, { mode: 'auto' });
-      holoAnswer(result.answer, result.source);
+      holoAnswer(result.answer, result.source, result.engine);
       addHoloLog(`${(result.engine || 'brain').toUpperCase()} · reply received`);
       if (stateRef) stateRef.lastReply = result.answer;
       if (result.markers && result.markers.length && window.IRA_GE) window.IRA_GE.addMarkers(result.markers);
