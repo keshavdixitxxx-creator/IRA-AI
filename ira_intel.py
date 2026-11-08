@@ -10,7 +10,7 @@ Everything in this module is sourced from open, keyless endpoints:
     military ...... same providers, military filter
     orbit ......... api.wheretheiss.at  (ISS)
     places ........ nominatim.openstreetmap.org + Wikipedia geosearch
-    knowledge ..... <lang>.wikipedia.org REST API
+    knowledge ..... <lang>.wikipedia.org REST API + DuckDuckGo Instant Answers
 
 If a provider is unreachable the feed reports ``ok: false`` and the rest of the
 interface keeps working. Nothing here pretends a failed feed succeeded.
@@ -555,6 +555,39 @@ def wikipedia_summary(query: str, lang: str = "en") -> dict | None:
     except Exception as exc:  # noqa: BLE001
         print("[IRA intel] wikipedia:", exc)
         return None
+
+
+def duckduckgo_summary(query: str, lang: str = "en") -> dict | None:
+    """Keyless DuckDuckGo Instant Answer fallback (not presented as full web search)."""
+    del lang  # DuckDuckGo currently selects the answer language from the query itself.
+    try:
+        data = _json("https://api.duckduckgo.com/?" + urlencode({
+            "q": query, "format": "json", "no_html": "1", "no_redirect": "1",
+            "skip_disambig": "0", "t": "IRA-AI",
+        }), 8)
+        candidates = [
+            (data.get("Answer"), data.get("AbstractURL")),
+            (data.get("AbstractText"), data.get("AbstractURL")),
+            (data.get("Definition"), data.get("DefinitionURL")),
+        ]
+
+        def related(items):
+            for item in items or []:
+                if not isinstance(item, dict):
+                    continue
+                if item.get("Text"):
+                    candidates.append((item.get("Text"), item.get("FirstURL")))
+                if item.get("Topics"):
+                    related(item.get("Topics"))
+        related(data.get("RelatedTopics"))
+        for text, url in candidates:
+            clean = re.sub(r"\s+", " ", str(text or "")).strip()
+            if clean:
+                return {"title": str(data.get("Heading") or query), "extract": clean[:4000],
+                        "url": str(url or ("https://duckduckgo.com/?" + urlencode({"q": query})))}
+    except Exception as exc:  # noqa: BLE001
+        print("[IRA intel] duckduckgo:", exc)
+    return None
 
 
 # --------------------------------------------------------------------------- #

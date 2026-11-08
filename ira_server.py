@@ -9,10 +9,9 @@ GET  /api/intel/flights       live aircraft only (civil + military)
 GET  /api/intel/place?q=      geocode a place to lat/lon
 GET  /api/intel/news?q=       headlines, optionally filtered
 GET  /api/cameras             curated public live camera feeds
-GET  /api/realtime            legacy monitor feed (kept for older clients)
+GET  /api/diagnostics         live CPU, memory, process, and network diagnostics
 POST /api/brain               IRA's answer: cloud brain -> live intel -> Wikipedia
 POST /api/chat                your own OpenAI-compatible provider (optional)
-POST /api/intel/ask           alias of /api/brain for the God's Eye console
 
 No API key is required for any of the above. The optional OpenAI-compatible
 gateway still works when IRA_LLM_ENDPOINT and IRA_LLM_API_KEY are set.
@@ -20,6 +19,7 @@ gateway still works when IRA_LLM_ENDPOINT and IRA_LLM_API_KEY are set.
 
 from __future__ import annotations
 
+import base64
 import json
 import mimetypes
 import os
@@ -31,7 +31,11 @@ from urllib.parse import parse_qs, urlparse
 from urllib.request import Request, urlopen
 
 import ira_brain
+import ira_diagnostics
 import ira_intel
+import ira_office
+import ira_office_files
+import ollama_brain
 
 ROOT = Path(__file__).resolve().parent
 HOST = os.getenv("IRA_HOST", "0.0.0.0")
@@ -39,7 +43,7 @@ PORT = int(os.getenv("IRA_PORT", "5173"))
 ENDPOINT = os.getenv("IRA_LLM_ENDPOINT", "").strip()
 API_KEY = os.getenv("IRA_LLM_API_KEY", "").strip()
 MODEL = os.getenv("IRA_LLM_MODEL", "gpt-4o-mini")
-MAX_BODY = 60_000
+MAX_BODY = 250_000
 
 LANGUAGE_NAMES = {
     "en": "English", "hi": "Hindi", "bn": "Bengali", "ta": "Tamil",
@@ -106,6 +110,7 @@ class Handler(BaseHTTPRequestHandler):
                 "ok": True,
                 "aiConfigured": bool(ENDPOINT and API_KEY),
                 "cloudBrain": ira_brain.ENABLED,
+                "ollama": ollama_brain.brain_status(),
                 "keyRequired": False,
             })
 
@@ -113,6 +118,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json({
                 "ok": True,
                 "brain": ira_brain.brain_status(),
+                "ollama": ollama_brain.brain_status(),
                 "gateway": {"configured": bool(ENDPOINT and API_KEY), "model": MODEL if API_KEY else None},
                 "layers": {
                     "flights": "ADS-B public feeds (live)",
@@ -130,41 +136,26 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/brain/status":
             return self.send_json(ira_brain.brain_status())
 
+        if path == "/api/office/agents":
+            return self.send_json({"agents": [ira_office.agent_public(agent) for agent in ira_office.AGENTS],
+                                   "planner": "user-controlled-boss-rules"})
+
+        if path == "/api/diagnostics":
+            try:
+                return self.send_json(ira_diagnostics.get_diagnostics())
+            except Exception as exc:  # noqa: BLE001 - the UI has a labelled simulation fallback
+                return self.send_json({"ok": False, "error": str(exc)}, 500)
+
         if path == "/api/cameras":
             return self.send_json({"cameras": ira_intel.fetch_cameras()})
 
-        if path in ("/api/intel", "/api/realtime"):
+        if path == "/api/intel":
             params = self.query()
             full = params.get("full", "1") not in ("0", "false")
             try:
                 data = ira_intel.get_intel(full=full)
             except Exception as exc:  # noqa: BLE001
                 return self.send_json({"error": str(exc)}, 502)
-            if path == "/api/realtime":
-                # Legacy shape used by the original Global Monitor.
-                legacy = {
-                    "updated": data["generatedAt"],
-                    "weather": data["weather"]["data"],
-                    "earthquakes": data["earthquakes"]["data"],
-                    "naturalEvents": data["naturalEvents"]["data"],
-                    "headlines": data["headlines"]["data"],
-                    "flights": data["flights"]["data"],
-                    "military": data["military"]["data"],
-                    "iss": data["iss"]["data"],
-                    "traffic": data["traffic"]["data"],
-                    "cameras": data["cameras"]["data"],
-                    "systemNodes": data["systemNodes"]["data"],
-                    "feeds": {
-                        "weather": data["weather"]["ok"],
-                        "earthquakes": data["earthquakes"]["ok"],
-                        "naturalEvents": data["naturalEvents"]["ok"],
-                        "headlines": data["headlines"]["ok"],
-                        "flights": data["flights"]["ok"],
-                        "military": data["military"]["ok"],
-                    },
-                    "brief": data["brief"],
-                }
-                return self.send_json(legacy)
             return self.send_json(data)
 
         if path == "/api/intel/flights":
@@ -210,20 +201,51 @@ class Handler(BaseHTTPRequestHandler):
     # ------------------------------------------------------------------- POST
     def do_POST(self) -> None:  # noqa: N802
         path = urlparse(self.path).path
-        if path in ("/api/brain", "/api/intel/ask"):
+        if path == "/api/brain":
             return self.answer_brain()
+        if path == "/api/office/plan":
+            data = self.read_json()
+            goal = safe_text(data.get("goal"), 4000)
+            if not goal:
+                return self.send_json({"error": "A boss objective is required"}, 400)
+            return self.send_json({"planner": "user-controlled-boss-rules", "goal": goal,
+                                   "tasks": ira_office.plan_office(goal)})
+        if path == "/api/office/task":
+            data = self.read_json()
+            agent = safe_text(data.get("agent") or "atlas", 30)
+            if agent not in ira_office.AGENTS:
+                return self.send_json({"error": "Unknown office agent"}, 400)
+            data["mode"] = "office"
+            return self.answer_brain(data, ira_office.role_prompt(agent))
+        if path == "/api/office/file":
+            return self.answer_office_file()
         if path == "/api/chat":
             return self.answer_gateway()
         return self.send_json({"error": "Not found"}, 404)
 
-    def answer_brain(self) -> None:
+    def answer_office_file(self) -> None:
         data = self.read_json()
+        kind = safe_text(data.get("kind"), 20)
+        title = safe_text(data.get("title") or "IRA Office Work", 120)
+        content = str(data.get("content") or "")[:180_000]
+        try:
+            filename, mime, payload = ira_office_files.create_office_file(kind, title, content)
+            return self.send_json({"filename": filename, "mime": mime, "size": len(payload),
+                                   "content": base64.b64encode(payload).decode("ascii")})
+        except ValueError as exc:
+            return self.send_json({"error": str(exc)}, 400)
+        except Exception as exc:  # noqa: BLE001
+            return self.send_json({"error": f"Could not generate Office file: {exc}"}, 500)
+
+    def answer_brain(self, supplied_data: dict | None = None, role_prompt: str = "") -> None:
+        data = supplied_data if supplied_data is not None else self.read_json()
         message = safe_text(data.get("message"))
         if not message:
             return self.send_json({"error": "Message is required"}, 400)
         history = data.get("history") if isinstance(data.get("history"), list) else []
-        history = [item for item in history[-12:] if isinstance(item, dict)
-                   and item.get("role") in ("user", "assistant") and item.get("content")]
+        history = [{"role": item["role"], "content": safe_text(item.get("content"))}
+                   for item in history[-12:] if isinstance(item, dict)
+                   and item.get("role") in ("user", "assistant") and safe_text(item.get("content"))]
         lang = safe_text(data.get("language") or data.get("lang") or "en", 12)
         title = safe_text(data.get("title") or "Commander", 40)
         mode = safe_text(data.get("mode") or "auto", 12)
@@ -238,7 +260,28 @@ class Handler(BaseHTTPRequestHandler):
 
         errors: list[str] = []
 
-        # Live questions are answered from the feed data itself so numbers stay true.
+        # Local Ollama is preferred for every question when a selected model is ready.
+        # Current events are grounded with verified feed text rather than model guesses.
+        if ollama_brain.ENABLED:
+            try:
+                local_message = message
+                if wants_live:
+                    briefing = "Live feed context is unavailable; do not invent current values."
+                    if intel_context:
+                        try:
+                            briefing = ira_intel.compose_answer(message, intel_context, lang).get("text") or briefing
+                        except Exception as exc:  # noqa: BLE001
+                            errors.append(f"live grounding: {exc}")
+                    local_message = ("Use only the verified IRA live-feed context below for current values; "
+                                     "say when a requested value is absent.\n\n" + briefing[:12_000] +
+                                     "\n\nUser question: " + message)
+                result = ollama_brain.ask_ollama(local_message, history, lang, title, role_prompt)
+                return self.send_json({"answer": result["answer"], "engine": "ollama",
+                                       "model": result.get("model"), "source": None, "markers": []})
+            except Exception as exc:  # noqa: BLE001 - optional sidecar must not break IRA
+                errors.append(f"ollama: {exc}")
+
+        # Without Ollama, live questions still answer directly from the feeds themselves.
         if wants_live and intel_context:
             try:
                 composed = ira_intel.compose_answer(message, intel_context, lang)
@@ -250,16 +293,17 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:  # noqa: BLE001
                 errors.append(f"live intelligence: {exc}")
 
-        # General conversation / knowledge -> hosted cloud brain (no key).
+        # Existing hosted cloud remains available when the local brain is not running.
         if ira_brain.ENABLED:
             try:
-                reply = ira_brain.ask_brain(message, history, lang, title)
+                outgoing = (f"[IRA Office assignment instructions: {role_prompt}]\n" if role_prompt else "") + message
+                reply = ira_brain.ask_brain(outgoing, history, lang, title)
                 return self.send_json({"answer": reply, "engine": "cloud-brain",
                                        "source": None, "markers": []})
             except Exception as exc:  # noqa: BLE001
                 errors.append(f"cloud brain: {exc}")
 
-        if not intel_context:
+        if not intel_context and mode != "office":
             try:
                 intel_context = ira_intel.get_intel(full=False)
             except Exception:  # noqa: BLE001
@@ -283,9 +327,15 @@ class Handler(BaseHTTPRequestHandler):
                                    "source": wiki.get("url"), "markers": [],
                                    "degraded": True, "errors": errors[-2:]})
 
+        duckduckgo = ira_intel.duckduckgo_summary(message, lang)
+        if duckduckgo:
+            return self.send_json({"answer": duckduckgo["extract"], "engine": "duckduckgo",
+                                   "source": duckduckgo.get("url"), "markers": [],
+                                   "degraded": True, "errors": errors[-2:]})
+
         return self.send_json({
-            "answer": "My cloud brain and live feeds are both unreachable from this machine right now. "
-                      "The interface is still fully interactive; reconnect and ask again.",
+            "answer": "Ollama and my other knowledge connections are unreachable right now. "
+                      "Start ollama_brain.py for local answers, or reconnect and try again.",
             "engine": "offline", "source": None, "markers": [],
             "errors": errors[-3:],
         }, 200)
@@ -331,6 +381,7 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     print(f"IRA running at http://{HOST}:{PORT}")
+    print("Ollama     : optional local brain (run python ollama_brain.py)")
     print("Cloud brain :", "enabled (no API key)" if ira_brain.ENABLED else "disabled")
     print("AI gateway  :", "configured" if ENDPOINT and API_KEY else "not configured (keyless brain active)")
     ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()

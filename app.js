@@ -1,11 +1,11 @@
 const $ = (s, p=document) => p.querySelector(s); const $$ = (s,p=document)=>[...p.querySelectorAll(s)];
-const state={mode:'orb',listening:false,speaking:false,lastReply:'Welcome back. My systems are online and ready when you are.',pendingAction:null,bridge:false,userTitle:localStorage.getItem('iraUserTitle')||'Commander',quickAnswers:[]};
+const state={mode:'orb',listening:false,speaking:false,lastReply:'Welcome back. My systems are online and ready when you are.',pendingAction:null,bridge:false,userTitle:localStorage.getItem('iraUserTitle')||'Commander',quickAnswers:[],history:[]};
 fetch('./data/quick-answers.json',{cache:'no-store'}).then(r=>r.json()).then(data=>state.quickAnswers=Array.isArray(data.answers)?data.answers:[]).catch(error=>console.warn('Quick answers unavailable:',error));
-const scenes={orb:$('#orbScene'),persona:$('#personaScene'),vrm:$('#vrmScene'),monitor:$('#monitorScene'),cockpit:$('#cockpitScene'),holo:$('#holoScene'),godseye:$('#godsEyeScene')};
-function modeCopy(){return {orb:[`Good evening, <em>${escapeHTML(state.userTitle)}.</em>`,'IRA is listening. Ask anything, explore knowledge, or take control.'],persona:['Meet your <em>digital companion.</em>','A warm, expressive interface for every conversation.'],vrm:['Bring your <em>own identity.</em>','Load a VRM avatar locally and make IRA uniquely yours.'],monitor:['IRA <em>Global Monitor.</em>','Real-time intelligence, live signals, and AI analysis.'],cockpit:['IRA <em>Starship Cockpit.</em>','Flight telemetry, ship systems, and a direct comms link to IRA.'],holo:['IRA <em>Holo Deck.</em>','A holographic command wall built from live feeds.'],godseye:['IRA <em>God\'s Eye.</em>','Global surveillance grid: aircraft, cameras, signals and news on one map.']}}
-const modeLabels={vrm:'VRM Studio',monitor:'Global Monitor',cockpit:'Starship Cockpit',holo:'Holo Deck HUD',godseye:"God's Eye Grid"};
+const scenes={orb:$('#orbScene'),persona:$('#personaScene'),vrm:$('#vrmScene'),edex:$('#edexScene'),office:$('#officeScene')};
+function modeCopy(){return {orb:[`Good evening, <em>${escapeHTML(state.userTitle)}.</em>`,'IRA is listening. Ask anything, explore knowledge, or take control.'],persona:['Meet your <em>digital companion.</em>','A warm, expressive interface for every conversation.'],vrm:['Bring your <em>own identity.</em>','Load a VRM avatar locally and make IRA uniquely yours.'],edex:['IRA <em>Command Deck.</em>','Talk to IRA, monitor diagnostics, explore the globe, and manage live news.'],office:['Your AI <em>Office.</em>','Lead ten specialists through one connected brain and deliver real work.']}}
+const modeLabels={vrm:'VRM Studio',edex:'EDEX Command Deck',office:'IRA Office'};
 function escapeHTML(value){return value.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
-function setMode(mode){state.mode=mode;const copy=modeCopy();document.body.classList.remove('mode-orb','mode-persona','mode-vrm','mode-monitor','mode-cockpit','mode-holo','mode-godseye');document.body.classList.add('mode-'+mode);localStorage.setItem('iraMode',mode); $$('.scene').forEach(x=>x.classList.remove('active')); scenes[mode].classList.add('active'); $$('.mode-switch button').forEach(x=>x.classList.toggle('active',x.dataset.mode===mode)); $('#heroTitle').innerHTML=copy[mode][0];$('#heroSub').textContent=copy[mode][1];if(mode==='vrm'&&window.iraVRMResize)requestAnimationFrame(window.iraVRMResize);if(mode==='cockpit'){const t=$('#cockpitTitle');if(t)t.textContent=state.userTitle}if(mode==='holo'&&window.iraHoloEnter)window.iraHoloEnter();if(mode==='godseye'&&window.iraGodsEyeEnter)window.iraGodsEyeEnter()}
+function setMode(mode){if(!scenes[mode])mode='orb';const previous=state.mode;if(previous==='edex'&&mode!=='edex'&&window.iraEdexLeave)window.iraEdexLeave();if(previous==='office'&&mode!=='office'&&window.IRAOffice?.leave)window.IRAOffice.leave();state.mode=mode;const copy=modeCopy();document.body.classList.remove(...Object.keys(scenes).map(name=>'mode-'+name));document.body.classList.add('mode-'+mode);localStorage.setItem('iraMode',mode);$$('.scene').forEach(x=>x.classList.remove('active'));scenes[mode].classList.add('active');$$('.mode-switch button').forEach(x=>x.classList.toggle('active',x.dataset.mode===mode));$('#heroTitle').innerHTML=copy[mode][0];$('#heroSub').textContent=copy[mode][1];if(mode==='vrm'&&window.iraVRMResize)requestAnimationFrame(window.iraVRMResize);if(mode==='edex'&&window.iraEdexEnter)window.iraEdexEnter();if(mode==='office'&&window.IRAOffice?.enter)window.IRAOffice.enter()}
 $$('.mode-switch button').forEach(b=>b.onclick=()=>{setMode(b.dataset.mode);toast(`${modeLabels[b.dataset.mode]||(b.dataset.mode[0].toUpperCase()+b.dataset.mode.slice(1))} interface selected.`);setTimeout(closeLayers,180)});
 
 // Cinematic five-second automatic welcome entry
@@ -48,20 +48,67 @@ function uiText(){const base=$('#language').value.split('-')[0];return languageT
 function detectSpokenLanguage(text){const current=$('#language').value.split('-')[0];if(/[\u0900-\u097F]/.test(text))return['hi','mr'].includes(current)?current:'hi';if(/[\u0600-\u06FF]/.test(text))return['ar','ur'].includes(current)?current:'ar';const tests=[['bn',/[\u0980-\u09FF]/],['pa',/[\u0A00-\u0A7F]/],['gu',/[\u0A80-\u0AFF]/],['ta',/[\u0B80-\u0BFF]/],['te',/[\u0C00-\u0C7F]/],['ar',/[\u0600-\u06FF]/],['ru',/[\u0400-\u04FF]/],['ja',/[\u3040-\u30FF]/],['ko',/[\uAC00-\uD7AF]/],['zh',/[\u4E00-\u9FFF]/]];for(const [lang,re] of tests)if(re.test(text))return lang;const s=` ${text.toLowerCase()} `;if(/\b(hola|gracias|qué|cómo|por favor|quién)\b/.test(s))return'es';if(/\b(bonjour|merci|comment|pourquoi|avec|quel)\b/.test(s))return'fr';if(/\b(hallo|danke|warum|wie|bitte|was)\b/.test(s))return'de';if(/\b(olá|obrigad[oa]|como|por que|você)\b/.test(s))return'pt';if(/[a-z]{2,}/i.test(text))return'en';return null}
 function adoptDetectedLanguage(text){if(!$('#autoLanguageToggle').checked)return;const base=detectSpokenLanguage(text);if(!base)return;const option=$$(`#language option`).find(o=>o.value.toLowerCase().startsWith(base));if(!option||option.value===$('#language').value)return;$('#language').value=option.value;if(rec)rec.lang=option.value;localStorage.setItem('iraLanguage',option.value);$('#inlineLanguage').textContent=option.textContent;document.documentElement.lang=option.value;$('#responseText').dir=/^(ar|ur)/.test(option.value)?'rtl':'auto';toast(`Language detected: ${option.textContent}`)}
 function setReply(text,source){state.lastReply=text;$('#responseText').textContent=text;const a=$('#sourceLink');if(source){a.textContent='View source ↗';a.href=source}else{a.textContent='';a.removeAttribute('href')}if($('#voiceToggle').checked)speak(text)}
-function setSpeaking(on){state.speaking=on;$('#orb').classList.toggle('speaking',on);if(!state.listening)$('#orbState').textContent=on?'SPEAKING':'READY'}
+let speechGeneration=0;
+function setSpeaking(on){state.speaking=on;$('#orb').classList.toggle('speaking',on);if(!state.listening)$('#orbState').textContent=on?'SPEAKING':'READY';const button=$('#speakAgain');button.classList.toggle('speaking',on);button.setAttribute('aria-pressed',String(on));$('#speakAgainText').textContent=on?'SPEAKING':'SPEAK'}
 function speak(text){
- if(typeof rec!=='undefined'&&state.listening)rec.stop();speechSynthesis.cancel();setSpeaking(false);const u=new SpeechSynthesisUtterance(text);u.lang=$('#language').value;const voices=speechSynthesis.getVoices(),base=u.lang.split('-')[0].toLowerCase(),matching=voices.filter(v=>v.lang.toLowerCase().startsWith(base));
- const score=v=>(/natural|neural|premium|enhanced|online/i.test(v.name)?8:0)+(/female|zira|samantha|heera|lekha|veena|susan|aria|google/i.test(v.name)?5:0)+(v.localService?1:2)-(/compact|espeak/i.test(v.name)?5:0);
- u.voice=(matching.length?[...matching].sort((a,b)=>score(b)-score(a))[0]:voices[0])||null;u.rate=1.18;u.pitch=1.02;u.volume=1;u.onstart=()=>setSpeaking(true);u.onend=()=>setSpeaking(false);u.onerror=()=>setSpeaking(false);speechSynthesis.speak(u)
+ const content=String(text||'').trim();if(!content)return;
+ if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){toast('Voice playback is not available in this browser. Try Chrome or Edge.');return}
+ const generation=++speechGeneration;
+ try{
+  if(typeof rec!=='undefined'&&state.listening)rec.stop();speechSynthesis.cancel();setSpeaking(false);const u=new SpeechSynthesisUtterance(content);u.lang=$('#language').value;const voices=speechSynthesis.getVoices(),base=u.lang.split('-')[0].toLowerCase(),matching=voices.filter(v=>v.lang.toLowerCase().startsWith(base));
+  const score=v=>(/natural|neural|premium|enhanced|online/i.test(v.name)?8:0)+(/female|zira|samantha|heera|lekha|veena|susan|aria|google/i.test(v.name)?5:0)+(v.localService?1:2)-(/compact|espeak/i.test(v.name)?5:0);
+  u.voice=(matching.length?[...matching].sort((a,b)=>score(b)-score(a))[0]:voices[0])||null;u.rate=1.08;u.pitch=1.02;u.volume=1;
+  u.onstart=()=>{if(generation===speechGeneration)setSpeaking(true)};u.onend=()=>{if(generation===speechGeneration)setSpeaking(false)};
+  u.onerror=event=>{if(generation!==speechGeneration)return;setSpeaking(false);if(!['canceled','interrupted'].includes(event.error))toast(`Voice playback failed${event.error?`: ${event.error}`:''}. Check browser sound and speech voices.`)};
+  speechSynthesis.resume();speechSynthesis.speak(u);setTimeout(()=>{if(generation===speechGeneration&&speechSynthesis.paused)speechSynthesis.resume()},100);
+ }catch(error){setSpeaking(false);toast('Could not start voice playback: '+(error?.message||error))}
 }
 $('#speakAgain').onclick=()=>speak(state.lastReply);
 
-async function askIRA(q){$('#responseText').textContent=uiText().thinking;$('#sourceLink').textContent='';$('#voiceTranscript').textContent=q;
- const simple=localAnswer(q); if(simple){setReply(simple);return simple}
- try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,language:$('#language').value,title:state.userTitle}),signal:AbortSignal.timeout(25000)});if(r.ok){const data=await r.json();if(data.answer){setReply(data.answer);return}}}catch(e){console.info('AI backend unavailable; using knowledge fallback.')}
- if(typeof window.iraBrainAsk==='function'){try{const brain=await window.iraBrainAsk(q);if(brain&&brain.answer){setReply(brain.answer,brain.source||null);if(brain.markers&&window.iraPublishMarkers)window.iraPublishMarkers(brain.markers);return brain}}catch(e){console.info('Cloud brain unavailable; using local knowledge.')}}
- if($('#wikiToggle').checked){try{const option=$('#language').selectedOptions[0],wiki=option.dataset.wiki||'en';const search=await fetch(`https://${wiki}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*&srlimit=1`).then(r=>r.json());const hit=search.query?.search?.[0];if(hit){const page=await fetch(`https://${wiki}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(hit.title)}`).then(r=>r.json());if(page.extract){setReply(page.extract.length>520?page.extract.slice(0,517)+'…':page.extract,page.content_urls?.desktop?.page);return}}}catch(e){console.warn(e)}}
- setReply("I couldn't find a reliable live result for that yet. Connect IRA to a server-side LLM endpoint for full generative answers; I can still help with Wikipedia topics and local commands.")}
+function updateBrainStatus(kind,reason=''){
+ const pill=$('#brainStatus'),label=$('#brainStatusText');if(!pill||!label)return;
+ const labels={checking:'BRAIN · STARTING',ready:'CLOUD BRAIN · READY',online:'CLOUD BRAIN · ONLINE',ollama:'OLLAMA · LOCAL',gateway:'AI GATEWAY · ONLINE',fallback:'KNOWLEDGE · ACTIVE',duckduckgo:'DUCKDUCKGO · ACTIVE',offline:'BRAIN · OFFLINE'};
+ pill.classList.remove('checking','ready','online','ollama','gateway','fallback','duckduckgo','offline');pill.classList.add(kind);label.textContent=labels[kind]||labels.ready;
+ pill.title=reason||'IRA answer status';
+ document.dispatchEvent(new CustomEvent('ira:brain-status',{detail:{kind,reason}}));
+}
+async function refreshBrainStatus(){
+ updateBrainStatus('checking');
+ try{
+  const response=await fetch('/api/health',{cache:'no-store',signal:AbortSignal.timeout(5000)}),data=await response.json();if(!response.ok)throw Error('Health check failed');
+  if(data.ollama?.ready)updateBrainStatus('ollama',`Local Ollama ready with ${data.ollama.model}. No API key is required.`);
+  else updateBrainStatus(data.cloudBrain?'ready':'offline',data.cloudBrain?'Ollama is offline. Hosted cloud, Wikipedia, and DuckDuckGo fallbacks are available.':'Start ollama_brain.py for local answers, or use Wikipedia and DuckDuckGo fallbacks.');
+ }catch{updateBrainStatus('offline','Start ira_server.py to connect IRA to the hosted cloud brain.')}
+}
+function recordExchange(question,answer){state.history.push({role:'user',content:question},{role:'assistant',content:answer});state.history=state.history.slice(-12)}
+function deliverAnswer(question,answer,source,engine){
+ recordExchange(question,answer);setReply(answer,source||null);
+ const status={'cloud-brain':'online',ollama:'ollama',gateway:'gateway','live-intel':'fallback',wikipedia:'fallback',duckduckgo:'duckduckgo',offline:'offline'}[engine];if(status)updateBrainStatus(status);
+ return answer;
+}
+async function askIRA(q){
+ q=String(q||'').trim();if(!q)return;
+ $('#responseText').textContent=uiText().thinking;$('#sourceLink').textContent='';$('#voiceTranscript').textContent=q;
+ const simple=localAnswer(q);if(simple)return deliverAnswer(q,simple,null,'local');
+ const history=state.history.slice(-12);
+ try{
+  const response=await fetch('/api/brain',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,history,language:$('#language').value,title:state.userTitle,mode:'auto'}),signal:AbortSignal.timeout(45000)});
+  const data=await response.json().catch(()=>({}));if(!response.ok||!data.answer||data.engine==='offline')throw Error(data.error||'The hosted brain did not answer.');
+  deliverAnswer(q,data.answer,data.source,data.engine||'cloud-brain');return data;
+ }catch(error){console.info('Cloud brain unavailable; trying the optional AI gateway and knowledge fallback.',error.message)}
+ // Preserve support for a user-configured OpenAI-compatible server gateway.
+ try{
+  const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,history,language:$('#language').value,title:state.userTitle}),signal:AbortSignal.timeout(25000)}),data=await response.json().catch(()=>({}));
+  if(response.ok&&data.answer){deliverAnswer(q,data.answer,null,'gateway');return data}
+ }catch(error){console.info('Optional AI gateway unavailable.',error.message)}
+ if($('#wikiToggle').checked){try{
+  const option=$('#language').selectedOptions[0],wiki=option.dataset.wiki||'en';
+  const search=await fetch(`https://${wiki}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*&srlimit=1`).then(r=>r.json()),hit=search.query?.search?.[0];
+  if(hit){const page=await fetch(`https://${wiki}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(hit.title)}`).then(r=>r.json());if(page.extract){const answer=page.extract.length>520?page.extract.slice(0,517)+'…':page.extract,source=page.content_urls?.desktop?.page;deliverAnswer(q,answer,source,'wikipedia');return{answer,source,engine:'wikipedia'}}}
+ }catch(error){console.warn('Wikipedia fallback unavailable.',error.message)}}
+ const answer="I couldn't reach my cloud brain or find a reliable knowledge result just now. Please check the connection and ask me again.";
+ deliverAnswer(q,answer,null,'offline');return{answer,engine:'offline'};
+}
 function calculateQuestion(question){
  let text=question.toLowerCase().replaceAll(',','').trim();const requested=/\b(calculate|compute|add|plus|subtract|minus|multiply|times|divide|divided|what is|answer)\b/.test(text)||/^[\d\s().+\-*/x÷]+$/.test(text);if(!requested||!/[0-9]/.test(text))return null;
  text=text.replace(/subtract\s+(-?\d+(?:\.\d+)?)\s+from\s+(-?\d+(?:\.\d+)?)/g,'$2 - $1').replace(/add\s+(-?\d+(?:\.\d+)?)\s+(?:and|to)\s+(-?\d+(?:\.\d+)?)/g,'$1 + $2').replace(/multiply\s+(-?\d+(?:\.\d+)?)\s+by\s+(-?\d+(?:\.\d+)?)/g,'$1 * $2').replace(/divide\s+(-?\d+(?:\.\d+)?)\s+by\s+(-?\d+(?:\.\d+)?)/g,'$1 / $2');
@@ -75,81 +122,7 @@ function calculateQuestion(question){
 function localAnswer(q){const s=q.toLowerCase().trim(),calculation=calculateQuestion(q);if(calculation)return calculation;const stored=state.quickAnswers.find(item=>item.keywords?.some(keyword=>s.includes(String(keyword).toLowerCase())));if(stored?.answer)return stored.answer.replaceAll('{{title}}',state.userTitle);if(/^(hi|hello|hey|good morning|good evening|नमस्ते|नमस्कार|হ্যালো|নমস্কার|வணக்கம்|నమస్కారం|hola|bonjour|hallo|مرحبا|こんにちは)/u.test(s))return uiText().hello(state.userTitle);if(s.includes('who are you')||s.includes('your name'))return "I'm IRA — your Immersive Responsive Assistant. I combine conversation, live knowledge, voice, visual personas, and permission-based automation.";if(s.includes('time'))return `It is ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}.`;if(s.includes('date')||s.includes('day is'))return `Today is ${new Date().toLocaleDateString([], {weekday:'long',year:'numeric',month:'long',day:'numeric'})}.`;if(/open (browser|calculator|whatsapp)|close (window|app)/.test(s)){openAutomation();return 'I opened the automation deck. Choose an action and confirm it when you are ready.'}return null}
 $$('[data-prompt]').forEach(b=>b.onclick=()=>askIRA(b.dataset.prompt));
 
-// Global Monitor — real-time dashboard and dedicated IRA analysis chat.
-function updateMonitorClock(){const now=new Date();$('#monitorDate').textContent=now.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase();$('#monitorTime').textContent=now.toUTCString().slice(17,25)+' UTC'}updateMonitorClock();setInterval(updateMonitorClock,1000);
-
-// JARVIS telemetry dials + cloud-brain core pulse (Monitor scene)
-function setDial(valueId,arcId,percent){const b=$('#'+valueId),arc=$('#'+arcId);if(!b||!arc)return;const clamped=Math.max(2,Math.min(100,percent));b.textContent=Math.round(clamped)+'%';const c=2*Math.PI*27;arc.style.strokeDasharray=c.toFixed(1);arc.style.strokeDashoffset=(c*(1-clamped/100)).toFixed(1)}
-(function jarvisDials(){
-  let reactor=93,signal=88,sync=100;
-  function tick(){setDial('dialReactor','dialReactorArc',reactor);setDial('dialSignal','dialSignalArc',signal);setDial('dialSync','dialSyncArc',sync)}
-  tick();
-  setInterval(()=>{if(state.mode!=='monitor')return;reactor=Math.max(70,Math.min(100,reactor+(Math.random()*6-3)));signal=Math.max(60,Math.min(100,signal+(Math.random()*8-4)));sync=Math.max(90,Math.min(100,sync+(Math.random()*3-1)));tick()},2200);
-})();
-// Keep the IRA cloud-brain core (and cockpit HUD brain) pulsing in sync with speech/listening state.
-setInterval(()=>{const core=$('#jarvisCore');if(core)core.classList.toggle('speaking',!!state.speaking||!!state.listening);const cockpitBrain=$('.hud-brain');if(cockpitBrain)cockpitBrain.style.animationDuration=(state.speaking||state.listening)?'1s':'3.6s'},280);
-
-function addInsight(role,text){const box=document.createElement('div');box.className='insight-card '+(role==='user'?'user':'');const tag=document.createElement('small');tag.textContent=role==='user'?'YOU':'IRA ANALYSIS';const p=document.createElement('p');p.textContent=text;box.append(tag,p);$('#insightMessages').appendChild(box);box.scrollIntoView({behavior:'smooth',block:'end'})}
-async function askMonitor(question){addInsight('user',question);$('#monitorPrompt').value='';const pending=document.createElement('div');pending.className='insight-card thinking';pending.innerHTML='<small>IRA ANALYSIS</small><p>Analyzing live context…</p>';$('#insightMessages').appendChild(pending);await askIRA(question);pending.remove();addInsight('ira',state.lastReply)}
-$('#monitorChatForm').onsubmit=e=>{e.preventDefault();const q=$('#monitorPrompt').value.trim();if(q)askMonitor(q)};$('#monitorMic').onclick=()=>$('#micBtn').click();
-function plotEvent(event,type='earthquake'){const dot=document.createElement('button');dot.className='map-event '+type;dot.style.left=`${(event.lon+180)/3.6}%`;dot.style.top=`${(90-event.lat)/1.8}%`;dot.title=event.title||'Live event';dot.onclick=()=>askMonitor(`Tell me about ${event.title}`);$('#mapEvents').appendChild(dot)}
-async function loadRealtime(){try{const data=await fetch('/api/realtime',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('feed unavailable');return r.json()});$('#mapEvents').textContent='';(data.earthquakes||[]).slice(0,100).forEach(e=>plotEvent(e,'earthquake'));(data.naturalEvents||[]).slice(0,100).forEach(e=>plotEvent({...e,title:`${e.category}: ${e.title}`},'natural'));if(data.weather)plotEvent({lat:28.6692,lon:77.4538,title:`Ghaziabad weather: ${Math.round(data.weather.temperature)}°C`},'weather');[{lat:51.5,lon:-.1,title:'London network node'},{lat:40.7,lon:-74,title:'New York network node'},{lat:35.7,lon:139.7,title:'Tokyo network node'},{lat:28.6,lon:77.2,title:'New Delhi network node'}].forEach(e=>plotEvent(e,'system'));const total=(data.earthquakes?.length||0)+(data.naturalEvents?.length||0);$('#eventCount').textContent=`${total} LIVE EVENTS`;$('#quakeValue').textContent=data.earthquakes?.length??'--';if(data.weather){$('#weatherValue').textContent=`${Math.round(data.weather.temperature)}°`;$('#weatherDetail').textContent=`Ghaziabad · Wind ${Math.round(data.weather.wind)} km/h`}const list=$('#headlineList');list.textContent='';(data.headlines||[]).slice(0,8).forEach((item,i)=>{const a=document.createElement('a');a.className='headline-item';a.href=item.url;a.target='_blank';a.rel='noreferrer';const src=(item.source||'LIVE').trim();const hue=[...src].reduce((h,c)=>h+c.charCodeAt(0),0)%360;a.innerHTML=`<i class="thumb" style="--hue:${hue}">${escapeHTML(src.slice(0,2).toUpperCase()||'IR')}</i><span><small>${escapeHTML(src||'LIVE')} · ${String(i+1).padStart(2,'0')}</small><b>${escapeHTML(item.title)}</b></span>`;list.appendChild(a)});$('#newsStatus').textContent='LIVE';const top=data.headlines?.[0]?.title,quakes=data.earthquakes?.length||0,natural=data.naturalEvents?.length||0;$('#worldBrief').textContent=top?`Top signal: ${top} Monitoring ${quakes} seismic events and ${natural} active NASA-tracked natural events.`:`Monitoring ${quakes} seismic events and ${natural} natural events. Live headline feed is reconnecting.`;$('#networkValue').textContent='LIVE'}catch(error){console.warn(error);$('#eventCount').textContent='RECONNECTING';$('#newsStatus').textContent='OFFLINE';$('#networkValue').textContent='RETRY'}}
-loadRealtime();setInterval(loadRealtime,180000);$$('.map-layers input').forEach(input=>input.onchange=()=>$('#worldMap').classList.toggle('hide-'+input.dataset.layer,!input.checked));
-const mapView={scale:1,x:0,y:0};function applyMapView(){const transform=`translate(${mapView.x}px,${mapView.y}px) scale(${mapView.scale})`;$('#worldMap>img').style.transform=transform;$('#mapEvents').style.transform=transform}
-$$('.map-zoom button').forEach(button=>button.onclick=e=>{e.stopPropagation();const action=button.dataset.zoom;if(action==='reset'){mapView.scale=1;mapView.x=mapView.y=0}else mapView.scale=Math.max(1,Math.min(4,mapView.scale*(action==='in'?1.25:.8)));applyMapView()});let mapDragging=false,mapLastX=0,mapLastY=0;$('#worldMap').addEventListener('wheel',e=>{e.preventDefault();mapView.scale=Math.max(1,Math.min(4,mapView.scale*(e.deltaY<0?1.12:.9)));applyMapView()},{passive:false});$('#worldMap').addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;mapDragging=true;mapLastX=e.clientX;mapLastY=e.clientY;$('#worldMap').setPointerCapture(e.pointerId)});$('#worldMap').addEventListener('pointermove',e=>{if(!mapDragging||mapView.scale===1)return;mapView.x+=e.clientX-mapLastX;mapView.y+=e.clientY-mapLastY;mapLastX=e.clientX;mapLastY=e.clientY;applyMapView()});$('#worldMap').addEventListener('pointerup',()=>mapDragging=false);$('#worldMap').addEventListener('pointercancel',()=>mapDragging=false);
-
-// Starship Cockpit — sci-fi flight HUD, ship telemetry, and a dedicated comms link to IRA.
-function updateCockpitClock(){const now=new Date();const d=$('#cockpitDate'),t=$('#cockpitTime');if(!d||!t)return;d.textContent=now.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase();t.textContent=now.toUTCString().slice(17,25)+' UTC'}
-updateCockpitClock();setInterval(updateCockpitClock,1000);
-function addCockpitLog(role,text){const box=$('#cockpitLog');if(!box)return;const line=document.createElement('div');line.className='comms-line '+(role==='user'?'user':role==='sys'?'sys':'ira');const tag=document.createElement('small');tag.textContent=role==='user'?'YOU':role==='sys'?'SYS':'IRA';const p=document.createElement('p');p.textContent=text;line.append(tag,p);box.appendChild(line);box.scrollTo({top:box.scrollHeight,behavior:'smooth'})}
-async function askCockpit(question){addCockpitLog('user',question);const prompt=$('#cockpitPrompt');if(prompt)prompt.value='';const pending=document.createElement('div');pending.className='comms-line ira thinking';pending.innerHTML='<small>IRA</small><p>Processing telemetry…</p>';$('#cockpitLog')?.appendChild(pending);const state0=$('#cockpitState');if(state0)state0.textContent='PROCESSING';await askIRA(question);pending.remove();addCockpitLog('ira',state.lastReply);if(state0)state0.textContent='NAV LOCKED'}
-$('#cockpitChatForm')?.addEventListener('submit',e=>{e.preventDefault();const q=$('#cockpitPrompt').value.trim();if(q)askCockpit(q)});
-$('#cockpitMic')?.addEventListener('click',()=>$('#micBtn').click());
-$$('[data-cockpit-prompt]').forEach(b=>b.addEventListener('click',()=>askCockpit(b.dataset.cockpitPrompt)));
-
-// Simulated flight telemetry: gentle live jitter so the console always feels alive.
-(function cockpitTelemetry(){
-  const gauges=[['gaugeReactor',93],['gaugeShield',81],['gaugeLife',100],['gaugeThrust',66]];
-  let heading=47,velocity=21400,altitude=308;
-  setInterval(()=>{
-    if(state.mode!=='cockpit')return;
-    gauges.forEach(([id,base])=>{const el=$('#'+id);if(!el)return;const jitter=Math.max(2,Math.min(100,base+(Math.random()*6-3)));el.style.width=jitter.toFixed(0)+'%';const label=el.closest('.gauge')?.querySelector('b');if(label)label.textContent=jitter.toFixed(0)+'%'});
-    heading=(heading+(Math.random()*4-2)+360)%360;velocity+=Math.random()*120-60;altitude+=Math.random()*1.4-.7;
-    const h=$('#cockpitHeading'),v=$('#cockpitVelocity'),a=$('#cockpitAltitude');
-    if(h)h.textContent=String(Math.round(heading)).padStart(3,'0')+'°';
-    if(v)v.innerHTML=Math.round(velocity).toLocaleString()+'<i>km/h</i>';
-    if(a)a.innerHTML=Math.round(altitude)+'<i>km</i>';
-    if(Math.random()<.08)$('#hullValue') && ($('#hullValue').textContent=(96+Math.random()*4).toFixed(0)+'%');
-  },1600);
-})();
-
-// Cockpit HUD canvas: rotating attitude rings, sweeping radar arc, and starlight parallax.
-(function cockpitHUD(){
-  const canvas=$('#cockpitCanvas');if(!canvas)return;const ctx=canvas.getContext('2d');
-  const blips=Array.from({length:14},()=>({a:Math.random()*Math.PI*2,r:Math.random()*150+40,speed:(Math.random()*.0006+.0002)*(Math.random()<.5?1:-1)}));
-  function resizeCockpit(){const stage=canvas.parentElement;if(!stage)return;const w=stage.clientWidth,h=stage.clientHeight;canvas.width=w*devicePixelRatio;canvas.height=h*devicePixelRatio;canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
-  addEventListener('resize',resizeCockpit);resizeCockpit();
-  function accent(){const raw=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#38e8ff';const n=parseInt(raw.replace('#',''),16);return[(n>>16)&255,(n>>8)&255,n&255]}
-  (function draw(now=0){
-    requestAnimationFrame(draw);
-    if(state.mode!=='cockpit')return;
-    const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;
-    const cx=w/2,cy=h/2,[r,g,b]=accent();
-    ctx.clearRect(0,0,w,h);
-    // radar sweep
-    const sweep=(now*.00022)%(Math.PI*2);
-    const grad=ctx.createConicGradient?ctx.createConicGradient(sweep,cx,cy):null;
-    if(grad){grad.addColorStop(0,`rgba(${r},${g},${b},.26)`);grad.addColorStop(.06,`rgba(${r},${g},${b},0)`);grad.addColorStop(1,`rgba(${r},${g},${b},0)`);ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,Math.min(w,h)*.46,0,Math.PI*2);ctx.fill()}
-    // concentric range rings
-    for(let i=1;i<=3;i++){ctx.beginPath();ctx.arc(cx,cy,i*Math.min(w,h)*.14,0,Math.PI*2);ctx.strokeStyle=`rgba(${r},${g},${b},${.14-i*.02})`;ctx.lineWidth=1;ctx.stroke()}
-    // rotating blips
-    blips.forEach(p=>{const a=p.a+now*p.speed,x=cx+Math.cos(a)*p.r*(Math.min(w,h)/380),y=cy+Math.sin(a)*p.r*.55*(Math.min(w,h)/380);ctx.beginPath();ctx.arc(x,y,2,0,7);ctx.fillStyle=`rgba(${r},${g},${b},.75)`;ctx.fill()});
-    // faint drifting starfield
-    ctx.save();ctx.globalAlpha=.5;for(let i=0;i<40;i++){const sx=(i*97+now*.01)%w,sy=(i*53)%h;ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(sx,sy,1,1)}ctx.restore();
-  })();
-})();
-
-function routeAsk(q){if(state.mode==='monitor')return askMonitor(q);if(state.mode==='cockpit')return askCockpit(q);if(state.mode==='holo'&&window.askHolo)return window.askHolo(q);if(state.mode==='godseye'&&window.askGodsEye)return window.askGodsEye(q);return askIRA(q)}
+function routeAsk(q){if(state.mode==='edex'&&window.askEdex)return window.askEdex(q);if(state.mode==='office'&&window.askOffice)return window.askOffice(q);return askIRA(q)}
 $('#textChatForm').onsubmit=e=>{e.preventDefault();const q=$('#textPrompt').value.trim();if(!q)return;$('#textPrompt').value='';routeAsk(q)};
 $('#textMicBtn').onclick=()=>$('#micBtn').click();
 
@@ -241,7 +214,9 @@ input.onchange=()=>loadVRM(input.files[0]);['dragenter','dragover'].forEach(n=>d
 // Automation bridge; explicit confirmation is required for every action.
 function openAutomation(){drawer('#automationDrawer');checkBridge()}$('#automationBtn').onclick=openAutomation;
 async function checkBridge(){const box=$('.bridge-status'),text=$('#bridgeText');text.textContent='Checking local connection…';try{const r=await fetch('http://127.0.0.1:8765/health',{signal:AbortSignal.timeout(1200)});if(!r.ok)throw 0;state.bridge=true;box.classList.add('connected');text.textContent='Connected · confirmation required'}catch{state.bridge=false;box.classList.remove('connected');text.textContent='Offline · run automation_bridge.py'}}$('#retryBridge').onclick=checkBridge;
-$$('.command-grid button').forEach(b=>b.onclick=()=>{state.pendingAction=b.dataset.action;$('#confirmTitle').textContent=b.dataset.label+'?';$('#confirmCopy').textContent=`IRA will ask the local desktop bridge to “${b.dataset.label}”. This affects your computer and will happen only once.`;$('#confirmModal').classList.add('show');backdrop.classList.add('show')});
+function requestAutomation(action,label){state.pendingAction=action;$('#confirmTitle').textContent=label+'?';$('#confirmCopy').textContent=`IRA will ask the local desktop bridge to “${label}”. This affects your computer and will happen only once.`;$('#confirmModal').classList.add('show');backdrop.classList.add('show')}
+$$('.command-grid button').forEach(b=>b.onclick=()=>requestAutomation(b.dataset.action,b.dataset.label));
 $('#cancelAction').onclick=()=>{$('#confirmModal').classList.remove('show')};$('#confirmAction').onclick=async()=>{const action=state.pendingAction;$('#confirmModal').classList.remove('show');if(!state.bridge)return toast('Desktop bridge is offline. Start automation_bridge.py first.');try{const r=await fetch('http://127.0.0.1:8765/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,confirmed:true})});const d=await r.json();toast(d.message||'Action completed.')}catch{toast('Could not reach the desktop bridge.')}};
-$('#voiceToggle').checked=localStorage.getItem('iraVoice')!=='off';$('#wikiToggle').checked=localStorage.getItem('iraWiki')!=='off';$('#autoLanguageToggle').checked=localStorage.getItem('iraAutoLanguage')!=='off';$('#voiceToggle').onchange=e=>{localStorage.setItem('iraVoice',e.target.checked?'on':'off');toast(e.target.checked?'Voice responses enabled.':'Voice responses disabled.')};$('#wikiToggle').onchange=e=>{localStorage.setItem('iraWiki',e.target.checked?'on':'off');toast(e.target.checked?'Live knowledge enabled.':'Live knowledge disabled.')};$('#autoLanguageToggle').onchange=e=>{localStorage.setItem('iraAutoLanguage',e.target.checked?'on':'off');toast(e.target.checked?'Automatic language detection enabled.':'Automatic language detection disabled.')};
-setMode(localStorage.getItem('iraMode')||'orb');setTimeout(()=>speechSynthesis.getVoices(),200);
+$('#voiceToggle').checked=localStorage.getItem('iraVoice')!=='off';$('#wikiToggle').checked=localStorage.getItem('iraWiki')!=='off';$('#autoLanguageToggle').checked=localStorage.getItem('iraAutoLanguage')!=='off';$('#voiceToggle').onchange=e=>{localStorage.setItem('iraVoice',e.target.checked?'on':'off');if(!e.target.checked){speechGeneration++;if('speechSynthesis' in window)speechSynthesis.cancel();setSpeaking(false)}toast(e.target.checked?'Voice responses enabled.':'Voice responses disabled.')};$('#wikiToggle').onchange=e=>{localStorage.setItem('iraWiki',e.target.checked?'on':'off');toast(e.target.checked?'Live knowledge enabled.':'Live knowledge disabled.')};$('#autoLanguageToggle').onchange=e=>{localStorage.setItem('iraAutoLanguage',e.target.checked?'on':'off');toast(e.target.checked?'Automatic language detection enabled.':'Automatic language detection disabled.')};
+// Restore the saved scene after all interface scripts have registered their lifecycle hooks.
+setTimeout(()=>{setMode(localStorage.getItem('iraMode')||'orb');refreshBrainStatus()},0);setTimeout(()=>{if('speechSynthesis' in window)speechSynthesis.getVoices()},200);
