@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="office-ui.css" />
   <link rel="stylesheet" href="argus-ui.css" />
   <link rel="stylesheet" href="chat-ui.css" />
-  <link rel="stylesheet" href="dispatch-ui.css" />
+  <link rel="stylesheet" href="os-ui.css" />
 </head>
 <body class="welcome-active">
   <canvas id="starfield" aria-hidden="true"></canvas>
@@ -481,56 +481,117 @@
       </div>
     </section>
 
-    <section id="dispatchScene" class="scene dispatch-scene" aria-label="The IRA Dispatch — intelligence paper">
-      <div class="paper">
+    <section id="osScene" class="scene os-scene" aria-label="IRA K-10 — a Windows-flavoured desktop with Kali Linux at heart, and IRA on call">
+      <div class="os-desktop" id="osDesktop">
 
-        <header class="dispatch-masthead">
-          <div class="dispatch-flags"><span>THE ALL-SEEING PRESS</span><span>EST. SESSION 001</span><span>PRICE · ONE QUESTION</span></div>
-          <h1 class="dispatch-name">The IRA <em>Dispatch</em></h1>
-          <div class="dispatch-tagline">“All the news the wire can carry — and one assistant who reads it for you.”</div>
-          <div class="dispatch-edition"><span id="dispatchDate">—</span><span>DELHI EDITION</span><span id="dispatchBuild">Composing…</span></div>
-          <div class="dispatch-offline" id="dispatchOffline">THE WIRE IS UNREACHABLE FROM THIS MACHINE. This edition carries the masthead and the desk only — headlines, photos and sections appear when the server can reach public RSS feeds.</div>
-        </header>
+        <!-- boot overlay -->
+        <div class="os-boot" id="osBoot" aria-hidden="true">
+          <pre class="os-boot-lines" id="osBootLines"></pre>
+          <p class="os-skip">PRESS ANY KEY · CLICK TO SKIP</p>
+        </div>
 
-        <div class="dispatch-section">Front Page</div>
-        <div class="dispatch-top">
-          <div>
-            <div class="dispatch-kicker" id="dispatchKicker">TOP STORY</div>
-            <h2 class="dispatch-headline" id="dispatchHeadline">Composing the front page…</h2>
-            <div class="dispatch-top-meta" id="dispatchTopMeta">—</div>
-            <div class="dispatch-digest" id="dispatchDigest">Composing…</div>
+        <!-- lock screen -->
+        <div class="os-lock" id="osLock" aria-hidden="true">
+          <div class="os-lock-glow"></div>
+          <div class="os-lock-time" id="osLockTime">--:--</div>
+          <div class="os-lock-date" id="osLockDate">—</div>
+          <div class="os-lock-badge"><span class="os-lock-dot"></span>IRA K-10 · SECURE SESSION · SIMULATED ENVIRONMENT</div>
+          <div class="os-lock-user"><div class="os-lock-avatar">K</div><div><b>root</b><small>keshav · sudo powers granted by IRA</small></div></div>
+          <p class="os-lock-hint">CLICK ANYWHERE TO SIGN IN</p>
+        </div>
+
+        <!-- desktop icons -->
+        <div class="os-icons" id="osIcons" role="list"></div>
+
+        <!-- window layer -->
+        <div class="os-windows" id="osWindows"></div>
+
+        <!-- start menu -->
+        <div class="os-start" id="osStart" aria-hidden="true" role="menu" aria-label="Start menu">
+          <div class="os-start-rail">
+            <button class="os-rail-btn" id="osRailCopilot" title="IRA Copilot" aria-label="IRA Copilot">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9"/></svg>
+            </button>
+            <button class="os-rail-btn" data-app="explorer" title="This PC" aria-label="This PC">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="6.5" rx="1"/><rect x="2.5" y="13.5" width="19" height="6.5" rx="1"/><circle cx="6.5" cy="7.2" r=".5" fill="currentColor"/><circle cx="6.5" cy="16.7" r=".5" fill="currentColor"/></svg>
+            </button>
+            <button class="os-rail-btn" data-app="terminal" title="IRA Root Terminal" aria-label="IRA Root Terminal">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="1.5"/><path d="M6 9l3.5 3L6 15"/><path d="M11 15.5h6"/></svg>
+            </button>
+            <div class="os-rail-spacer"></div>
+            <button class="os-rail-btn os-rail-power" id="osPowerBtn" title="Power — lock session" aria-label="Power — lock session">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg>
+            </button>
           </div>
-          <figure class="dispatch-photo" id="dispatchLeadPhoto">
-            <img id="dispatchLeadPhotoImg" alt="Top story photograph" />
-            <figcaption id="dispatchLeadPhotoCap">Photo via feed embed</figcaption>
-          </figure>
+
+          <div class="os-start-apps">
+            <label class="os-start-search"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg><input id="osStartSearch" type="text" placeholder="Type here to search apps" autocomplete="off" aria-label="Search apps" /></label>
+            <p class="os-start-heading">All apps</p>
+            <div class="os-app-list" id="osAppList" role="list"></div>
+          </div>
+
+          <div class="os-tiles" id="osTiles" aria-label="Pinned tiles">
+            <button class="os-tile os-tile-wide os-tile-accent" data-app="copilot">
+              <b>IRA COPILOT</b><span>Ask me anything — I have the whole wire memorised.</span>
+              <i>AI ORCHESTRATOR · ONLINE</i>
+            </button>
+            <button class="os-tile os-tile-live" data-app="wire">
+              <b>ARGUS WIRE</b><span class="os-tile-line" id="osTileWire">Reading the wire…</span>
+              <i>RSS · NO KEY</i>
+            </button>
+            <button class="os-tile os-tile-mem" data-app="copilot">
+              <b>HERMES MEMORY</b><span class="os-tile-memory" id="osTileMemory">LV —</span>
+              <i>PERSISTENT</i>
+            </button>
+            <button class="os-tile" data-app="monitor">
+              <b>SYSTEM</b><span class="os-tile-memory" id="osTileCpu">CPU —</span>
+              <i>LIVE METERS</i>
+            </button>
+            <button class="os-tile os-tile-term" data-app="terminal">
+              <b>ROOT TERMINAL</b><span>root@ira:~# whoami</span>
+              <i>NANO · CURL · AI</i>
+            </button>
+          </div>
+
+          <div class="os-start-foot">
+            <span class="os-start-user"><i></i>root · keshav</span>
+            <span class="os-start-note">K-10 is a SIMULATION — answers by AI can err · actions & scans are fictional</span>
+          </div>
         </div>
 
-        <div class="dispatch-section">The Briefs</div>
-        <div class="dispatch-briefs" id="dispatchBriefs"></div>
-
-        <div class="dispatch-section">The Wire · Continued</div>
-        <div class="dispatch-columns">
-          <div class="dispatch-digest-list" id="dispatchWire"></div>
-          <aside>
-            <div class="dispatch-ask">
-              <h3>Ask the Desk</h3>
-              <p style="font: italic 10.5px/1.5 Georgia,serif; color:#a89a83; margin:0 0 8px">Query IRA the way you’d ring a newsroom. Answers are printed below your question.</p>
-              <form id="deskAskForm" autocomplete="off">
-                <input id="deskAskInput" type="text" placeholder="What should the paper chase next?" aria-label="Ask the desk" />
-                <button type="submit">File Query</button>
-              </form>
-              <div id="deskNotes" aria-live="polite"></div>
-            </div>
-            <p style="font: 9px/1.7 Georgia,serif; color:#7e7261; margin:14px 0 0"><b style="color:#a89a83">IRA MEMORY —</b> <span id="dispatchMemory">IRA’s memory ledger prints here each edition.</span></p>
-          </aside>
+        <!-- taskbar -->
+        <div class="os-taskbar" role="toolbar" aria-label="Taskbar">
+          <button class="os-start-btn" id="osStartBtn" aria-label="Start" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M3 5.4 10.4 4.3V11.3H3zM11.5 4.1 21 3v8.3h-9.5zM3 12.6h7.4v7L3 18.5zM11.5 12.6H21V21l-9.5-1.3z"/></svg>
+          </button>
+          <div class="os-search" id="osSearchWrap">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.8"/><path d="M15.8 15.8L21 21"/></svg>
+            <input id="osSearchInput" type="text" placeholder="Type here to ask IRA or search the OS" autocomplete="off" spellcheck="false" aria-label="Ask IRA or search the OS" />
+            <kbd>↵</kbd>
+            <div class="os-search-results" id="osSearchResults" role="listbox" aria-hidden="true"></div>
+          </div>
+          <div class="os-task-buttons" id="osTaskButtons" aria-label="Open windows"></div>
+          <div class="os-tray">
+            <button class="os-tray-btn os-tray-caret" id="osTrayCaret" aria-label="Show hidden icons" tabindex="-1">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 14l6-6 6 6"/></svg>
+            </button>
+            <span class="os-tray-btn os-tray-static" title="Network — IRA mesh (simulated)">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 9a15 15 0 0 1 19 0"/><path d="M6 13a10.5 10.5 0 0 1 12 0"/><path d="M9.6 16.8a6 6 0 0 1 4.8 0"/><circle cx="12" cy="19.6" r=".4" fill="currentColor"/></svg>
+            </span>
+            <span class="os-tray-btn os-tray-static" title="Volume — 100%">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18V6L7.5 9.5H4z" fill="currentColor" stroke="none" opacity=".85"/><path d="M15 9.5a4.5 4.5 0 0 1 0 5"/><path d="M17.8 7.2a8 8 0 0 1 0 9.6"/></svg>
+            </span>
+            <span class="os-tray-btn os-tray-static" id="osBattery" title="Power">⌁</span>
+            <button class="os-clock" id="osClockWrap" aria-label="Date and time">
+              <span class="os-clock-time" id="osClock">--:--</span>
+              <span class="os-clock-date" id="osClockDate">—</span>
+            </button>
+            <button class="os-show-desktop" id="osShowDesktop" title="Show desktop" aria-label="Show desktop"></button>
+          </div>
         </div>
 
-        <footer class="dispatch-colophon">
-          <span>ALL ITEMS LINK TO THE ORIGINAL REPORTING. PHOTOS ARE FEED EMBEDS WHERE AVAILABLE.</span>
-          <span>AUTO-GENERATED COMPILATION · NOT EDITORIAL ENDORSEMENT · SIM LAYERS REMAIN SIM</span>
-          <span>THE IRA DISPATCH IS PRINTED IN YOUR BROWSER FROM PUBLIC RSS.</span>
-        </footer>
+        <!-- in-OS toast -->
+        <div class="os-toast" id="osToast" role="status" aria-live="polite"></div>
       </div>
     </section>
 
@@ -579,7 +640,7 @@
         <button data-mode="office"><span>▦</span> OFFICE</button>
         <button data-mode="argus"><span>⌖</span> ARGUS</button>
         <button data-mode="chat"><span>❝</span> CHAT</button>
-        <button data-mode="dispatch"><span>¶</span> DISPATCH</button>
+        <button data-mode="os"><span>⊞</span> K-10 OS</button>
       </div>
     </div>
     <label class="setting"><span><b>Voice responses</b><small>Read IRA's answers aloud</small></span><input id="voiceToggle" type="checkbox" checked /><i></i></label>
@@ -629,6 +690,6 @@
   <script src="office-ui.js"></script>
   <script src="argus-ui.js"></script>
   <script src="chat-ui.js"></script>
-  <script src="dispatch-ui.js"></script>
+  <script src="os-ui.js"></script>
 </body>
 </html>

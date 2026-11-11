@@ -15,9 +15,10 @@ A polished browser prototype for a multimodal personal assistant with **eight vi
    YouTube video, and IRA's persistent memory built into the top bar
 7. **IRA Chat** — a clean, simple conversation in the style of Gemini/ChatGPT: one stream of
    messages, suggestion chips, a rounded composer, and per-answer engine chips. No dashboard chrome.
-8. **The IRA Dispatch** — a daily broadsheet intelligence paper composed from the same live world
-   wire: masthead, front-page story with photo and an auto-composed digest, the briefs, the wire, and
-   an "Ask the Desk" box whose answers are printed into the edition
+8. **IRA K-10** — a simulated Windows 10 desktop with a Kali Linux heart and IRA as the AI on call:
+   boot sequence, lock screen, draggable windows, Start menu with live tiles, taskbar with ask-IRA
+   search, a root terminal (news · SIMULATED scan · drills · free-text → IRA), this-PC file explorer,
+   an Argus wire reader, a live system monitor and Hermes-aware say-hi memory
 
 VRM files stay in the browser and are never uploaded.
 
@@ -261,24 +262,34 @@ Choose **CHAT** under **Settings → Interface mode**. It is deliberately the op
   to start fresh. Nothing is sent anywhere except the question, through the same `askIRA` path every
   other mode uses.
 
-## The IRA Dispatch (UI 8)
+## IRA K-10 (UI 8)
 
-Choose **DISPATCH** under **Settings → Interface mode**. A newspaper front page rendered live from the
-world wire — Georgia serif, double rules, just the facts:
+Choose **K-10 OS** under **Settings → Interface mode**. A simulated desktop lives inside the page —
+Windows 10 on the surface, Kali Linux underneath, and IRA herself as the AI on call.
 
-- **Front Page:** the lead story as a balanced serif headline with a feed-embedded photo (monogram
-  fallback when the feed carries none) and an **auto-digest** composed locally from the RSS headlines —
-  explicitly labelled "Auto-digest · composed locally… not editorial judgement".
-- **The Briefs:** the next stories as serif cards with photos where the feed embeds them; **The Wire · Continued**
-  lists the rest with UTC times.
-- **Ask the Desk:** ring the newsroom — your question is answered by IRA (same brain) and printed into
-  the edition as a dated desk note.
-- **Honest off-days:** when the wire is unreachable from the machine, the masthead still prints with an
-  "THE WIRE IS UNREACHABLE…" banner, the front page reads "The wire is silent.", and no headline is ever
-  invented. Ask the Desk still answers.
+- **Boot → lock screen:** an `[ OK ]`-style boot log (skippable) hands over to a Windows-style lock
+  screen with the live clock; click to sign in. The power button in the Start rail locks again.
+- **Desktop icons:** This PC, Root Terminal, IRA Copilot, Argus Wire, System Monitor, Recycle Bin.
+- **Draggable windows** with minimize / maximize / close and a taskbar with buttons, system tray
+  (network, volume, battery via `navigator.getBattery` where available), live clock and a show-desktop sliver.
+- **Start menu:** left rail (Copilot / files / terminal / power), searchable all-apps list, and **live tiles** —
+  IRA Copilot, the latest Wire headline, Hermes memory (level + interactions learned), live CPU/memory, and the terminal.
+- **Taskbar search:** type to filter apps; press **Enter** (or pick “Ask IRA: …”) to send the query straight to
+  IRA's brain in a Copilot window.
+- **IRA Root Terminal** (`root@ira:~#`): `help`, `neofetch`, `news` (reads `/api/intel/news`), `scan`
+  (a clearly labelled **SIMULATED** 192.168.1.0/24 sweep — no packets are sent), `breach <t>` (a labelled
+  training drill), `ask <q>` — and **any free text goes to IRA herself**. Honest about everything: no fake packets, no fake access.
+- **This PC (File Explorer):** a simulated filesystem — `System (C:)` with `Users/ira/Documents`, `kali-tools`, `logs`.
+  `memory.sys` dumps live Hermes state (`/api/hermes/status`), `brain.log` shows her resume point, `wire.log` the latest headlines.
+  The status bar always says **SIMULATED FS — NOT YOUR DISK**.
+- **Argus Wire:** a compact reader for the same RSS wire as ARGUS. Offline → it says so, never fabricates.
+- **System Monitor:** CPU / memory / network meters from `/api/diagnostics` (LIVE, source-labelled) with a CPU history
+  canvas and a **SIMULATED WORKLOAD** process table; degrades to labelled simulation when the endpoint is down.
+- **Hermes says hi:** on entering the mode, IRA posts a toast with the exact point she resumed from. A simulation —
+  except the memory, which is real and persisted in git-ignored `data/hermes-memory.json`.
 
-Everything links back to the original reporting; Dispatch is a compilation, not editorial endorsement,
-and it carries no SIM layers of its own.
+Everything on the desktop is fiction except IRA's brain and memory; the UI labels simulations as such and links
+out to real reporting from the wire.
 
 ## Optional OpenAI-compatible provider
 
