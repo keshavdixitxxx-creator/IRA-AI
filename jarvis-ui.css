@@ -1,0 +1,182 @@
+/* IRA Jarvis — Iron Man helmet HUD (UI 6)
+   Cyan/amber Jarvis palette, full-screen command deck.
+   Layout: top status bar, 3-column HUD (news | helmet | cameras),
+   bottom globe with moving OSINT tracks, Hermes character panel. */
+
+body.mode-jarvis:not(.welcome-active){overflow:hidden;background:#010409}
+body.mode-jarvis .ambient-bg{background:radial-gradient(circle at 50% 38%,rgba(0,180,220,.14),transparent 30%),radial-gradient(ellipse at 50% 100%,rgba(255,170,0,.06),transparent 45%),linear-gradient(180deg,#010409 0%,#020a14 55%,#010409 100%)!important}
+body.mode-jarvis .aurora-one{width:40vw;height:40vw;left:30vw;top:10vh;opacity:.08;background:#00d4ff}
+body.mode-jarvis .aurora-two{opacity:.04}
+body.mode-jarvis main{width:100%;height:100vh;padding:0}
+body.mode-jarvis .hero,
+body.mode-jarvis .response-panel,
+body.mode-jarvis .text-chat,
+body.mode-jarvis .voice-console,
+body.mode-jarvis .quick-actions{display:none !important}
+body.mode-jarvis .topbar{background:rgba(2,8,16,.94);border-bottom-color:rgba(0,212,255,.14)}
+body.mode-jarvis .status-pill{border-color:rgba(0,212,255,.3);color:#9fe4f5}
+
+.jarvis-scene{display:none}
+.jarvis-scene.active{position:fixed;inset:68px 0 0;height:auto;display:grid;z-index:2;overflow:hidden;background:radial-gradient(circle at 50% 40%,rgba(0,40,66,.35),transparent 60%),#010409}
+
+.jarvis-shell{width:100%;height:100%;display:grid;grid-template-rows:44px 1fr 232px 32px;gap:8px;padding:8px 10px 6px;box-sizing:border-box}
+.jarvis-topbar{display:flex;align-items:center;gap:14px;padding:0 14px;border:1px solid rgba(0,212,255,.22);border-radius:10px;background:linear-gradient(90deg,rgba(0,40,60,.55),rgba(2,10,20,.7),rgba(60,40,0,.25));backdrop-filter:blur(12px)}
+.jarvis-topbar .brand-glyph{width:28px;height:28px;border:1px solid rgba(0,212,255,.5);border-radius:50%;display:grid;place-items:center;color:#00d4ff;font:700 11px 'Space Grotesk';box-shadow:0 0 14px rgba(0,212,255,.35),inset 0 0 10px rgba(0,212,255,.2)}
+.jarvis-topbar .title{font:600 11px 'Space Grotesk';letter-spacing:3px;color:#e8f6ff}
+.jarvis-topbar .title small{display:block;font-size:7px;letter-spacing:2px;color:#5fb8d4;margin-top:2px}
+.jarvis-topbar .spacer{flex:1}
+.jarvis-topbar .stat{font:600 8px 'Space Grotesk';letter-spacing:1.5px;color:#7fb8cc;text-align:center}
+.jarvis-topbar .stat b{display:block;font-size:11px;color:#e8f6ff;margin-top:2px}
+.jarvis-topbar .stat b.amber{color:#ffb13b}
+.jarvis-topbar .clock{font:500 13px 'Space Grotesk';color:#e8f6ff;letter-spacing:2px}
+.jarvis-topbar .clock small{display:block;font-size:7px;color:#5fb8d4;letter-spacing:2px;text-align:right}
+
+.jarvis-main{display:grid;grid-template-columns:320px 1fr 320px;gap:8px;min-height:0}
+.jarvis-panel{border:1px solid rgba(0,212,255,.18);border-radius:10px;background:linear-gradient(180deg,rgba(2,16,28,.78),rgba(1,6,12,.85));backdrop-filter:blur(10px);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.jarvis-panel-head{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(0,212,255,.14);font:600 8px 'Space Grotesk';letter-spacing:2px;color:#7fd8f0}
+.jarvis-panel-head .live{color:#63f0b4}
+.jarvis-panel-head .live i{display:inline-block;width:5px;height:5px;border-radius:50%;background:#63f0b4;box-shadow:0 0 8px #63f0b4;margin-right:6px;animation:pulse 1.6s infinite}
+.jarvis-panel-body{flex:1;overflow-y:auto;padding:8px;scrollbar-width:thin;scrollbar-color:rgba(0,212,255,.4) transparent}
+.jarvis-panel-body::-webkit-scrollbar{width:4px}
+.jarvis-panel-body::-webkit-scrollbar-thumb{background:rgba(0,212,255,.35);border-radius:4px}
+
+/* News boxes */
+.news-card{border:1px solid rgba(255,255,255,.08);border-left:3px solid #00d4ff;border-radius:8px;padding:9px 11px;margin-bottom:8px;background:rgba(255,255,255,.02);transition:.2s;cursor:pointer}
+.news-card:hover{border-color:rgba(0,212,255,.4);background:rgba(0,212,255,.05);transform:translateX(2px)}
+.news-card.conflict{border-left-color:#ff6a66}
+.news-card.tech{border-left-color:#9b72ff}
+.news-card.business{border-left-color:#ffb13b}
+.news-card h4{font:500 11px 'Space Grotesk';line-height:1.4;margin:0 0 6px;color:#eef6fb}
+.news-card .meta{display:flex;gap:8px;font-size:8px;color:#6a8a9a;letter-spacing:.5px}
+.news-card .meta b{color:#7fd8f0;font-weight:600}
+.news-card .geo{margin-top:5px;font-size:8px;color:#ffb13b}
+
+/* Helmet center */
+.jarvis-center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px;position:relative;overflow:auto;scrollbar-width:none}
+.jarvis-center::-webkit-scrollbar{display:none}
+.jarvis-center:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,rgba(0,212,255,.1),transparent 42%);pointer-events:none}
+.helmet-wrap{position:relative;width:min(196px,56%);aspect-ratio:1/1.05;display:grid;place-items:center}
+.helmet-svg{width:100%;height:100%;filter:drop-shadow(0 0 30px rgba(0,212,255,.25))}
+.helmet-eye{fill:#00e5ff;filter:drop-shadow(0 0 8px #00e5ff)}
+.helmet-eye.speaking{animation:eyePulse .5s ease-in-out infinite}
+@keyframes eyePulse{50%{opacity:.6;filter:drop-shadow(0 0 16px #00e5ff)}}
+.hud-ring{position:absolute;border:1px solid rgba(0,212,255,.25);border-radius:50%;animation:spin 24s linear infinite}
+.hud-ring.r1{width:88%;height:88%;border-style:dashed}
+.hud-ring.r2{width:96%;height:96%;animation-duration:36s;animation-direction:reverse;opacity:.5}
+.hud-bracket{position:absolute;width:22px;height:22px;border:2px solid rgba(0,212,255,.6)}
+.hud-bracket.tl{top:4%;left:4%;border-right:0;border-bottom:0}
+.hud-bracket.tr{top:4%;right:4%;border-left:0;border-bottom:0}
+.hud-bracket.bl{bottom:4%;left:4%;border-right:0;border-top:0}
+.hud-bracket.br{bottom:4%;right:4%;border-left:0;border-top:0}
+.helmet-status{font:600 9px 'Space Grotesk';letter-spacing:3px;color:#7fd8f0;text-align:center}
+.helmet-status b{display:block;font-size:12px;color:#e8f6ff;margin-top:3px;letter-spacing:2px}
+.helmet-wave{display:flex;align-items:center;gap:3px;height:22px}
+.helmet-wave i{width:3px;background:#00d4ff;border-radius:3px;height:6px;opacity:.5}
+.helmet-wave.active i{animation:wave .6s ease-in-out infinite alternate}
+.helmet-wave i:nth-child(2),.helmet-wave i:nth-child(6){animation-delay:-.15s}
+.helmet-wave i:nth-child(3),.helmet-wave i:nth-child(5){animation-delay:-.3s}
+.helmet-wave i:nth-child(4){animation-delay:-.45s}
+
+/* Hermes character */
+.hermes-box{width:min(380px,90%);border:1px solid rgba(255,177,59,.3);border-radius:10px;background:linear-gradient(180deg,rgba(40,26,0,.45),rgba(10,8,2,.6));padding:10px 12px;display:flex;gap:12px;align-items:center}
+.hermes-figure{width:64px;height:64px;flex:0 0 auto;position:relative}
+.hermes-figure svg{width:100%;height:100%}
+.hermes-figure .wing{animation:wingFlap 1.2s ease-in-out infinite}
+@keyframes wingFlap{50%{transform:rotate(-8deg)}}
+.hermes-info{flex:1;min-width:0}
+.hermes-info .name{font:700 11px 'Space Grotesk';letter-spacing:2px;color:#ffd88a}
+.hermes-info .name small{font-size:7px;color:#c9a86a;letter-spacing:1.5px;display:block;margin-top:2px}
+.hermes-xp{height:6px;border-radius:4px;background:rgba(255,255,255,.08);margin:7px 0 5px;overflow:hidden}
+.hermes-xp i{display:block;height:100%;background:linear-gradient(90deg,#ffb13b,#ffd88a);border-radius:4px;transition:width .6s;box-shadow:0 0 10px rgba(255,177,59,.5)}
+.hermes-meta{display:flex;gap:10px;font-size:8px;color:#c9a86a}
+.hermes-meta b{color:#ffd88a}
+.hermes-thought{font-size:9px;color:#e8d5a8;font-style:italic;margin-top:5px;min-height:14px}
+.hermes-box.upgrading{animation:upgradeFlash .8s ease-out}
+@keyframes upgradeFlash{0%{box-shadow:0 0 0 2px #ffd88a,0 0 40px rgba(255,177,59,.6)}100%{box-shadow:none}}
+
+/* Cameras */
+.camera-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.camera-card{border:1px solid rgba(255,255,255,.1);border-radius:8px;overflow:hidden;background:#000;position:relative}
+.camera-card .cam-head{display:flex;justify-content:space-between;padding:5px 8px;font:600 7px 'Space Grotesk';letter-spacing:1.5px;color:#a8c8d8;background:rgba(2,10,20,.9)}
+.camera-card .cam-head .live{color:#ff6a66}
+.camera-card iframe{width:100%;height:110px;border:0;display:block;background:#000}
+.camera-card .cam-foot{padding:5px 8px;font-size:8px;color:#6a8a9a;background:rgba(2,10,20,.9)}
+
+/* Character sticks */
+.characters{display:flex;flex-direction:column;gap:6px}
+.character{display:flex;align-items:center;gap:10px;padding:7px 9px;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:rgba(255,255,255,.02)}
+.character .stick{width:28px;height:28px;flex:0 0 auto}
+.character .stick svg{width:100%;height:100%}
+.character .c-info{flex:1;min-width:0}
+.character .c-info b{font:600 9px 'Space Grotesk';letter-spacing:1.5px;color:#e8f6ff;display:block}
+.character .c-info small{font-size:8px;color:#6a8a9a}
+.character .c-status{font:600 7px 'Space Grotesk';letter-spacing:1px;padding:3px 7px;border-radius:10px;border:1px solid rgba(99,240,180,.4);color:#63f0b4}
+.character .c-status.working{border-color:rgba(255,177,59,.5);color:#ffb13b}
+.character .c-status.idle{border-color:rgba(255,255,255,.15);color:#6a8a9a}
+
+/* Globe */
+.jarvis-globe-panel{display:flex;flex-direction:column;min-height:0}
+.jarvis-globe-wrap{flex:1;position:relative;min-height:0;background:radial-gradient(circle at 50% 50%,rgba(0,60,90,.35),rgba(1,6,12,.9) 70%)}
+#jarvisGlobe{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
+#jarvisGlobe:active{cursor:grabbing}
+.globe-legend{display:flex;flex-wrap:wrap;gap:6px;padding:6px 10px;border-top:1px solid rgba(0,212,255,.14);font:600 7px 'Space Grotesk';letter-spacing:1px}
+.globe-legend button{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:#8ab8cc;border-radius:12px;padding:3px 9px;font:inherit;cursor:pointer}
+.globe-legend button.active{border-color:rgba(0,212,255,.5);color:#e8f6ff;background:rgba(0,212,255,.1)}
+.globe-legend button i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.globe-stats{display:flex;gap:14px;padding:5px 12px;font-size:8px;color:#6a8a9a;border-top:1px solid rgba(0,212,255,.1)}
+.globe-stats b{color:#e8f6ff}
+
+/* Ticker */
+.jarvis-ticker{border:1px solid rgba(0,212,255,.18);border-radius:8px;background:rgba(1,6,12,.85);overflow:hidden;display:flex;align-items:center}
+.jarvis-ticker .ticker-label{flex:0 0 auto;padding:0 12px;font:700 8px 'Space Grotesk';letter-spacing:2px;color:#ffb13b;border-right:1px solid rgba(255,177,59,.3);height:100%;display:flex;align-items:center}
+.ticker-track{display:flex;gap:36px;white-space:nowrap;animation:tickerScroll 60s linear infinite;padding-left:20px}
+.ticker-track span{font-size:9px;color:#a8c8d8}
+.ticker-track b{color:#e8f6ff}
+@keyframes tickerScroll{to{transform:translateX(-50%)}}
+
+/* Hermes memory log */
+.memory-log{display:flex;flex-direction:column;gap:6px}
+.memory-log .entry{font-size:9px;color:#a8c8d8;line-height:1.5;border-left:2px solid rgba(255,177,59,.4);padding-left:8px}
+.memory-log .entry b{color:#ffd88a}
+.memory-log .entry time{color:#5a7a8a;font-size:8px;display:block}
+.resume-box{border:1px solid rgba(255,177,59,.35);border-radius:8px;padding:9px 11px;background:rgba(255,177,59,.06);font-size:10px;line-height:1.55;color:#f0e0b8;margin-bottom:8px}
+.resume-box b{color:#ffd88a}
+.topic-chips{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+.topic-chips span{font:600 7px 'Space Grotesk';letter-spacing:1px;padding:3px 8px;border-radius:10px;border:1px solid rgba(0,212,255,.3);color:#7fd8f0}
+
+/* Ask bar inside the helmet column */
+.jarvis-ask{display:flex;width:min(380px,94%);border:1px solid rgba(0,212,255,.35);border-radius:9px;overflow:hidden;background:rgba(0,20,32,.6);box-shadow:0 0 18px rgba(0,212,255,.12),inset 0 0 12px rgba(0,212,255,.06)}
+.jarvis-ask input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#e8f6ff;font-size:12px;padding:9px 12px;letter-spacing:.3px}
+.jarvis-ask input::placeholder{color:#4a7284}
+.jarvis-ask button{border:0;background:rgba(0,212,255,.16);color:#00e5ff;font:700 10px 'Space Grotesk';letter-spacing:2px;padding:0 18px;cursor:pointer;border-left:1px solid rgba(0,212,255,.3)}
+.jarvis-ask button:hover{background:rgba(0,212,255,.28);color:#bff2ff}
+.jarvis-answer{width:min(380px,94%);margin:0;font-size:10px;line-height:1.5;color:#bfe8f5;min-height:30px;max-height:58px;overflow-y:auto;border-left:2px solid rgba(0,212,255,.4);padding-left:8px;scrollbar-width:thin}
+
+/* Section sub-heads inside the right panel */
+.sticks-head{font:700 8px 'Space Grotesk';letter-spacing:2px;color:#5fb8d4;margin:12px 2px 7px;border-bottom:1px solid rgba(0,212,255,.12);padding-bottom:5px}
+.sticks-head:first-child{margin-top:2px}
+
+/* Hermes last-checkpoint row */
+.left-off{border:1px dashed rgba(255,177,59,.3);border-radius:8px;padding:7px 10px;margin-bottom:8px;background:rgba(255,177,59,.04)}
+.left-off small{font-size:7px;letter-spacing:2px;color:#c9a86a;display:block;margin-bottom:3px}
+.left-off div{font-size:9px;color:#f0e0b8;line-height:1.5}
+
+/* Globe toggle + honesty note */
+#jarvisGlobeToggle{border:1px solid rgba(0,212,255,.3);background:rgba(0,212,255,.07);color:#7fd8f0;border-radius:12px;font:600 8px 'Space Grotesk';letter-spacing:1.5px;padding:4px 10px;cursor:pointer;margin-left:10px}
+#jarvisGlobeToggle:hover{background:rgba(0,212,255,.16);color:#dffaff}
+.honesty-note{margin-left:auto;color:#4a7284;font-size:8px;max-width:380px;text-align:right}
+.jarvis-globe-panel .jarvis-panel-head{gap:8px}
+.jarvis-globe-panel .jarvis-panel-head #jarvisGlobeStatus{margin-left:auto}
+
+/* Responsive */
+@media(max-width:1100px){
+  .jarvis-main{grid-template-columns:280px 1fr 280px}
+}
+@media(max-width:860px){
+  body.mode-jarvis:not(.welcome-active){overflow:auto}
+  body.mode-jarvis .jarvis-scene.active{position:relative;inset:auto;height:auto;min-height:calc(100vh - 68px);overflow:visible}
+  .jarvis-shell{grid-template-rows:auto auto auto auto;height:auto}
+  .jarvis-main{grid-template-columns:1fr}
+  .jarvis-globe-wrap{min-height:300px}
+  .jarvis-topbar{flex-wrap:wrap}
+}

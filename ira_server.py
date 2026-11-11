@@ -10,6 +10,12 @@ GET  /api/intel/place?q=      geocode a place to lat/lon
 GET  /api/intel/news?q=       headlines, optionally filtered
 GET  /api/cameras             curated public live camera feeds
 GET  /api/diagnostics         live CPU, memory, process, and network diagnostics
+GET  /api/osint               Jarvis movement snapshot (flights/ships/trains/vehicles)
+GET  /api/osint/ships         simulated ship tracks (labelled)
+GET  /api/osint/trains        simulated train tracks (labelled)
+GET  /api/osint/vehicles      simulated vehicle flow (labelled)
+GET  /api/hermes/status       Hermes persistent memory + resume message
+POST /api/hermes/learn        record one interaction (Hermes learns)
 POST /api/brain               IRA's answer: cloud brain -> live intel -> Wikipedia
 POST /api/chat                your own OpenAI-compatible provider (optional)
 
@@ -24,6 +30,8 @@ import json
 import mimetypes
 import os
 import re
+import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -32,9 +40,11 @@ from urllib.request import Request, urlopen
 
 import ira_brain
 import ira_diagnostics
+import ira_hermes
 import ira_intel
 import ira_office
 import ira_office_files
+import ira_osint
 import ollama_brain
 
 ROOT = Path(__file__).resolve().parent
@@ -119,6 +129,7 @@ class Handler(BaseHTTPRequestHandler):
                 "ok": True,
                 "brain": ira_brain.brain_status(),
                 "ollama": ollama_brain.brain_status(),
+                "hermes": ira_hermes.get_status(),
                 "gateway": {"configured": bool(ENDPOINT and API_KEY), "model": MODEL if API_KEY else None},
                 "layers": {
                     "flights": "ADS-B public feeds (live)",
@@ -130,6 +141,10 @@ class Handler(BaseHTTPRequestHandler):
                     "orbit": "wheretheiss.at (live)",
                     "cameras": "public broadcaster embeds (live)",
                     "traffic": "simulation (clearly labelled)",
+                    "ships": "simulated AIS along real lanes (labelled)",
+                    "trains": "simulated rail tracks (labelled)",
+                    "vehicles": "simulated traffic flow (labelled)",
+                    "hermes": "persistent local memory (data/hermes-memory.json)",
                 },
             })
 
@@ -148,6 +163,30 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/cameras":
             return self.send_json({"cameras": ira_intel.fetch_cameras()})
+
+        if path == "/api/hermes/status":
+            return self.send_json(ira_hermes.get_status())
+
+        if path == "/api/osint":
+            try:
+                return self.send_json(ira_osint.get_osint_snapshot())
+            except Exception as exc:  # noqa: BLE001
+                return self.send_json({"error": str(exc)}, 502)
+
+        if path == "/api/osint/ships":
+            return self.send_json({"ships": ira_osint.fetch_ships(),
+                                   "simulated": True,
+                                   "source": "IRA simulated AIS (no keyless live feed)"})
+
+        if path == "/api/osint/trains":
+            return self.send_json({"trains": ira_osint.fetch_trains(),
+                                   "simulated": True,
+                                   "source": "IRA simulated rail (no keyless GTFS-RT)"})
+
+        if path == "/api/osint/vehicles":
+            return self.send_json({"vehicles": ira_osint.fetch_vehicles(),
+                                   "simulated": True,
+                                   "source": "IRA simulated flow (not live telematics)"})
 
         if path == "/api/intel":
             params = self.query()
@@ -201,6 +240,15 @@ class Handler(BaseHTTPRequestHandler):
     # ------------------------------------------------------------------- POST
     def do_POST(self) -> None:  # noqa: N802
         path = urlparse(self.path).path
+        if path == "/api/hermes/learn":
+            data = self.read_json()
+            status = ira_hermes.record_interaction(
+                safe_text(data.get("question"), 2000),
+                safe_text(data.get("answer"), 8000),
+                safe_text(data.get("engine"), 40),
+                safe_text(data.get("mode"), 20),
+            )
+            return self.send_json(status)
         if path == "/api/brain":
             return self.answer_brain()
         if path == "/api/office/plan":
@@ -236,6 +284,13 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json({"error": str(exc)}, 400)
         except Exception as exc:  # noqa: BLE001
             return self.send_json({"error": f"Could not generate Office file: {exc}"}, 500)
+
+    def _learn(self, question: str, answer: str, engine: str, mode: str) -> None:
+        """Hermes learns from every answer (best-effort, never breaks replies)."""
+        try:
+            ira_hermes.record_interaction(question, answer, engine, mode)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[Hermes] learn failed: {exc}")
 
     def answer_brain(self, supplied_data: dict | None = None, role_prompt: str = "") -> None:
         data = supplied_data if supplied_data is not None else self.read_json()
@@ -276,6 +331,7 @@ class Handler(BaseHTTPRequestHandler):
                                      "say when a requested value is absent.\n\n" + briefing[:12_000] +
                                      "\n\nUser question: " + message)
                 result = ollama_brain.ask_ollama(local_message, history, lang, title, role_prompt)
+                self._learn(message, result["answer"], "ollama", mode)
                 return self.send_json({"answer": result["answer"], "engine": "ollama",
                                        "model": result.get("model"), "source": None, "markers": []})
             except Exception as exc:  # noqa: BLE001 - optional sidecar must not break IRA
@@ -285,6 +341,7 @@ class Handler(BaseHTTPRequestHandler):
         if wants_live and intel_context:
             try:
                 composed = ira_intel.compose_answer(message, intel_context, lang)
+                self._learn(message, composed["text"], "live-intel", mode)
                 return self.send_json({
                     "answer": composed["text"], "engine": "live-intel",
                     "source": composed.get("source"), "markers": composed.get("markers", []),
@@ -298,6 +355,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 outgoing = (f"[IRA Office assignment instructions: {role_prompt}]\n" if role_prompt else "") + message
                 reply = ira_brain.ask_brain(outgoing, history, lang, title)
+                self._learn(message, reply, "cloud-brain", mode)
                 return self.send_json({"answer": reply, "engine": "cloud-brain",
                                        "source": None, "markers": []})
             except Exception as exc:  # noqa: BLE001
@@ -312,6 +370,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 composed = ira_intel.compose_answer(message, intel_context, lang)
                 if composed.get("text"):
+                    self._learn(message, composed["text"], "live-intel", mode)
                     return self.send_json({
                         "answer": composed["text"], "engine": "live-intel",
                         "source": composed.get("source"), "markers": composed.get("markers", []),
@@ -323,12 +382,14 @@ class Handler(BaseHTTPRequestHandler):
 
         wiki = ira_intel.wikipedia_summary(message, lang)
         if wiki:
+            self._learn(message, wiki["extract"], "wikipedia", mode)
             return self.send_json({"answer": wiki["extract"], "engine": "wikipedia",
                                    "source": wiki.get("url"), "markers": [],
                                    "degraded": True, "errors": errors[-2:]})
 
         duckduckgo = ira_intel.duckduckgo_summary(message, lang)
         if duckduckgo:
+            self._learn(message, duckduckgo["extract"], "duckduckgo", mode)
             return self.send_json({"answer": duckduckgo["extract"], "engine": "duckduckgo",
                                    "source": duckduckgo.get("url"), "markers": [],
                                    "degraded": True, "errors": errors[-2:]})
@@ -379,9 +440,23 @@ class Handler(BaseHTTPRequestHandler):
         print(f"[IRA] {self.address_string()} - {fmt % args}")
 
 
+def _hermes_heartbeat() -> None:
+    """Hermes self-upgrade heartbeat: +1 XP per second, persisted every 5s."""
+    while True:
+        time.sleep(5)
+        try:
+            ira_hermes.tick(5)
+        except Exception as exc:  # noqa: BLE001 - never kill the server
+            print(f"[Hermes] heartbeat tick failed: {exc}")
+
+
 if __name__ == "__main__":
+    _hermes_boot = ira_hermes.boot_session()
     print(f"IRA running at http://{HOST}:{PORT}")
     print("Ollama     : optional local brain (run python ollama_brain.py)")
     print("Cloud brain :", "enabled (no API key)" if ira_brain.ENABLED else "disabled")
     print("AI gateway  :", "configured" if ENDPOINT and API_KEY else "not configured (keyless brain active)")
+    print(f"Hermes     : level {_hermes_boot['level']} · {_hermes_boot['totalInteractions']} interactions · session #{_hermes_boot['sessionCount']}")
+    print(f"Hermes says: {_hermes_boot['resumeMessage']}")
+    threading.Thread(target=_hermes_heartbeat, daemon=True, name="hermes-heartbeat").start()
     ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()

@@ -1,6 +1,6 @@
 # IRA AI — Immersive Responsive Assistant
 
-A polished browser prototype for a multimodal personal assistant with **five visual modes**:
+A polished browser prototype for a multimodal personal assistant with **six visual modes**:
 
 1. **Liquid Orb** — animated voice-reactive visualizer
 2. **Anime Persona** — cinematic avatar presentation
@@ -10,6 +10,9 @@ A polished browser prototype for a multimodal personal assistant with **five vis
    and an automatic YouTube news-video manager
 5. **IRA Office** — a blue high-tech office with ten seated specialists, one user-controlled boss,
    individual workspaces, research/coding tools, a browser, and real Word/Excel/PowerPoint downloads
+6. **IRA Jarvis Helmet** — an Iron Man-style helmet HUD with live news boxes, an OSINT globe tracking
+   flights, military aircraft, the ISS, quakes and natural events alongside moving ship, train and
+   vehicle tracks, public live camera embeds, and **Hermes**, a persistent learning agent
 
 VRM files stay in the browser and are never uploaded.
 
@@ -211,6 +214,32 @@ YouTube playback depends on network access, current channel livestreams, and eac
 embedding policy. Unavailable embeds are skipped automatically; **OPEN ↗** remains available as
 a direct fallback.
 
+## IRA Jarvis Helmet (UI 6)
+
+Choose **JARVIS** under **Settings → Interface mode**. It is intentionally not pinned to the top bar.
+
+- **Iron-helmet HUD:** original IRA artwork of an Iron Man-style helmet with glowing eyes that react
+  while IRA speaks, a HUD command bar, and a built-in ask box — answers render inside the helmet view.
+- **Live news boxes:** world, technology and business headlines via Google News RSS (no key), with a
+  scrolling headline ticker; cards link out to the source story.
+- **OSINT globe:** a draggable orthographic globe rendering live, keyless public feeds — ADS-B civil and
+  military aircraft (airplanes.live / adsb.lol), the ISS orbit (wheretheiss.at), USGS earthquakes and NASA
+  EONET natural events — alongside **simulated** tracks for 24 ships on six real lanes, 8 trains (Rajdhani,
+  Shinkansen, TGV, Acela), 30 vehicles on six Indian and global corridors, and simulated Delhi/Mumbai/Bengaluru/
+  New York/London/Tokyo traffic signals. Ships, trains, vehicles and traffic are clearly labelled **SIM** in the
+  legend and stats bar; no keyless live AIS/GTFS/telematics feed exists, so these layers are deterministic
+  simulations along real corridors — never presented as live data.
+- **Cameras:** curated publicly embeddable live feeds (DW News, Al Jazeera English, Sky News, NASA Live and
+  more) — no key, no scraping, no stored video.
+- **Hermes — persistent learning agent:** she remembers every session in `data/hermes-memory.json`
+  (git-ignored), learns from each answer IRA gives, tracks the topics you ask about, and gains XP/levels
+  (+1 XP per second, +10–30 per interaction). On restart she restores the session — "Welcome back. Last
+  time we left off at …" — with her level, interaction count and favourite topics intact. The XP/level
+  system is a transparent memory counter, **not** neural-network training; nothing about it is hidden.
+
+Live feeds require outbound network access to their public endpoints; if a feed is unreachable the UI
+shows an honest offline/partial-feed state instead of fabricated data.
+
 ## Optional OpenAI-compatible provider
 
 A secure server-side gateway is also available at `POST /api/chat`. Keys never enter the browser.
@@ -258,7 +287,7 @@ service; for a packaged desktop release, connect the UI through Tauri/Electron I
 
 ## Development and tests
 
-Run the dependency-free server, planner, Ollama-routing, and OOXML tests:
+Run the dependency-free server, planner, Ollama-routing, OOXML, Hermes persistence, and OSINT-simulation tests:
 
 ```bash
 python -m unittest discover -s tests -v
