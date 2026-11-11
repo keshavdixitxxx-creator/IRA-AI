@@ -10,9 +10,9 @@ A polished browser prototype for a multimodal personal assistant with **six visu
    and an automatic YouTube news-video manager
 5. **IRA Office** — a blue high-tech office with ten seated specialists, one user-controlled boss,
    individual workspaces, research/coding tools, a browser, and real Word/Excel/PowerPoint downloads
-6. **IRA Jarvis Helmet** — an Iron Man-style helmet HUD with live news boxes, an OSINT globe tracking
-   flights, military aircraft, the ISS, quakes and natural events alongside moving ship, train and
-   vehicle tracks, public live camera embeds, and **Hermes**, a persistent learning agent
+6. **IRA Argus** — an all-seeing intelligence HUD: a photo-led world wire that rotates headlines every
+   second, an OSINT tracking globe with live feeds and moving ship/train/vehicle tracks, public live
+   YouTube video, and IRA's persistent memory built into the top bar
 
 VRM files stay in the browser and are never uploaded.
 
@@ -214,31 +214,34 @@ YouTube playback depends on network access, current channel livestreams, and eac
 embedding policy. Unavailable embeds are skipped automatically; **OPEN ↗** remains available as
 a direct fallback.
 
-## IRA Jarvis Helmet (UI 6)
+## IRA Argus (UI 6)
 
-Choose **JARVIS** under **Settings → Interface mode**. It is intentionally not pinned to the top bar.
+Choose **ARGUS** under **Settings → Interface mode**. It is intentionally not pinned to the top bar.
 
-- **Iron-helmet HUD:** original IRA artwork of an Iron Man-style helmet with glowing eyes that react
-  while IRA speaks, a HUD command bar, and a built-in ask box — answers render inside the helmet view.
-- **Live news boxes:** world, technology and business headlines via Google News RSS (no key), with a
-  scrolling headline ticker; cards link out to the source story.
-- **OSINT globe:** a draggable orthographic globe rendering live, keyless public feeds — ADS-B civil and
+- **WORLD WIRE (01):** a photo-led top story that rotates every second (hover index items to jump),
+  a progress counter, and a scrolling index of 30 headlines with source, time and photo thumbnails.
+  Headlines come from Google News RSS merged with The Guardian RSS (which embeds article photos) —
+  no key required; items link out to the original story.
+- **GLOBAL TRACKING (02):** a draggable orthographic globe. Live keyless public feeds — ADS-B civil and
   military aircraft (airplanes.live / adsb.lol), the ISS orbit (wheretheiss.at), USGS earthquakes and NASA
-  EONET natural events — alongside **simulated** tracks for 24 ships on six real lanes, 8 trains (Rajdhani,
-  Shinkansen, TGV, Acela), 30 vehicles on six Indian and global corridors, and simulated Delhi/Mumbai/Bengaluru/
-  New York/London/Tokyo traffic signals. Ships, trains, vehicles and traffic are clearly labelled **SIM** in the
-  legend and stats bar; no keyless live AIS/GTFS/telematics feed exists, so these layers are deterministic
-  simulations along real corridors — never presented as live data.
-- **Cameras:** curated publicly embeddable live feeds (DW News, Al Jazeera English, Sky News, NASA Live and
-  more) — no key, no scraping, no stored video.
-- **Hermes — persistent learning agent:** she remembers every session in `data/hermes-memory.json`
-  (git-ignored), learns from each answer IRA gives, tracks the topics you ask about, and gains XP/levels
-  (+1 XP per second, +10–30 per interaction). On restart she restores the session — "Welcome back. Last
-  time we left off at …" — with her level, interaction count and favourite topics intact. The XP/level
-  system is a transparent memory counter, **not** neural-network training; nothing about it is hidden.
+  EONET natural events — are plotted alongside **simulated** tracks for 24 ships on six real lanes, 8 trains
+  (Rajdhani, Shinkansen, TGV, Acela), 30 vehicles on six corridors and Delhi/Mumbai/Bengaluru/New York/London/
+  Tokyo traffic signals. Ships, trains, vehicles and traffic are labelled **SIM** in the legend, stats bar,
+  feed matrix and README — no keyless live AIS/GTFS/telematics feed exists, so those layers are deterministic
+  simulations along real corridors and are never presented as live data.
+- **FEED MATRIX:** a per-feed LIVE / SIM / OFFLINE readout under the globe, including the upstream error when
+  a live feed can't be reached — so an empty layer always says *why*.
+- **LIVE VIDEO (03):** curated public YouTube live broadcasts (DW News, Al Jazeera English, Sky News, NASA
+  Live…). No key, no scraping, no stored video. If a provider blocks the embed, the per-card **OPEN ↗** link
+  opens the stream on YouTube directly.
+- **IRA MEMORY CORE:** Hermes — IRA's persistent learning engine — now lives inside IRA herself: the top bar
+  shows her level, interaction count, current focus topic and the exact point she resumed from after restart.
+  She learns from every answer IRA gives and gains XP continuously (+1 XP/s heartbeat, +10–30 per interaction),
+  persisted in `data/hermes-memory.json` (git-ignored). This is a transparent memory counter, **not**
+  neural-network training; nothing about it is hidden.
 
-Live feeds require outbound network access to their public endpoints; if a feed is unreachable the UI
-shows an honest offline/partial-feed state instead of fabricated data.
+Live feeds require outbound network access to their public endpoints; unreachable feeds are shown as
+OFFLINE in the feed matrix and the wire/globe degrade honestly instead of fabricating data.
 
 ## Optional OpenAI-compatible provider
 

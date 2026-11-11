@@ -231,7 +231,7 @@ def fetch_vehicles() -> list[dict]:
 # Snapshot
 # --------------------------------------------------------------------------- #
 def get_osint_snapshot() -> dict:
-    """Movement snapshot for the Jarvis globe. Real + simulated, labelled."""
+    """Movement snapshot for the ARGUS globe. Real + simulated, labelled."""
     import ira_intel
 
     flights = ira_intel.feed_block(ira_intel.fetch_flights, "ADS-B civil")

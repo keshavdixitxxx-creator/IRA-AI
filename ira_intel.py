@@ -259,26 +259,62 @@ def fetch_natural_events() -> list[dict]:
     return events
 
 
+# Feeds that embed photos (Guardian RSS carries <img> in content:encoded)
+# are merged with Google News for breadth. Keys map to display topics via
+# FEED_TOPICS; sources fall back to FEED_SOURCES.
 NEWS_FEEDS = {
     "world": "https://news.google.com/rss/headlines/section/topic/WORLD?hl=en-IN&gl=IN&ceid=IN:en",
     "india": "https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en",
     "technology": "https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-IN&gl=IN&ceid=IN:en",
     "business": "https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-IN&gl=IN&ceid=IN:en",
     "conflict": "https://news.google.com/rss/search?q=conflict+OR+war+OR+military+when:1d&hl=en-IN&gl=IN&ceid=IN:en",
+    "guardian_world": "https://www.theguardian.com/world/rss",
+    "guardian_tech": "https://www.theguardian.com/technology/rss",
 }
+FEED_TOPICS = {"guardian_world": "world", "guardian_tech": "technology"}
+FEED_SOURCES = {"world": "Google News", "india": "Google News", "technology": "Google News",
+                "business": "Google News", "conflict": "Google News",
+                "guardian_world": "The Guardian", "guardian_tech": "The Guardian"}
+
+MEDIA_NS = "{http://search.yahoo.com/mrss/}"
+CONTENT_NS = "{http://purl.org/rss/1.0/modules/content/}"
+_IMG_RE = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
+
+
+def _extract_image(item: ET.Element) -> str:
+    """Best-effort article photo. Empty string when the feed has none."""
+    for tag in ("content", "thumbnail"):
+        node = item.find(MEDIA_NS + tag)
+        if node is not None:
+            url = (node.get("url") or "").strip()
+            if url.startswith("http"):
+                return url
+    enclosure = item.find("enclosure")
+    if enclosure is not None and (enclosure.get("type") or "").startswith("image"):
+        url = (enclosure.get("url") or "").strip()
+        if url.startswith("http"):
+            return url
+    body = item.findtext(CONTENT_NS + "encoded") or item.findtext("description") or ""
+    match = _IMG_RE.search(body)
+    if match and match.group(1).startswith("http"):
+        return match.group(1)
+    return ""
 
 
 def _parse_feed(xml_bytes: bytes, topic: str) -> list[dict]:
     root = ET.fromstring(xml_bytes)
+    display_topic = FEED_TOPICS.get(topic, topic)
+    default_source = FEED_SOURCES.get(topic, "Google News")
     items = []
     for index, item in enumerate(root.findall("./channel/item")[:24]):
         title = (item.findtext("title") or "Live headline").strip()
-        source = (item.findtext("source") or "Google News").strip()
+        source = (item.findtext("source") or default_source).strip()
         link = (item.findtext("link") or "#").strip()
         published = (item.findtext("pubDate") or "").strip()
         items.append({
             "id": f"{topic}-{index}", "title": title, "source": source, "url": link,
-            "published": published, "topic": topic, "geo": geo_tag(title),
+            "published": published, "topic": display_topic, "geo": geo_tag(title),
+            "image": _extract_image(item),
         })
     return items
 

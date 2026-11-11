@@ -1,4 +1,4 @@
-"""UI 6 (Jarvis) + Hermes persistence tests. Run: python -m unittest discover -s tests"""
+"""UI 6 (ARGUS) + Hermes persistence tests. Run: python -m unittest discover -s tests"""
 from __future__ import annotations
 
 import json

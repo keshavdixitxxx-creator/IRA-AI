@@ -10,7 +10,7 @@ GET  /api/intel/place?q=      geocode a place to lat/lon
 GET  /api/intel/news?q=       headlines, optionally filtered
 GET  /api/cameras             curated public live camera feeds
 GET  /api/diagnostics         live CPU, memory, process, and network diagnostics
-GET  /api/osint               Jarvis movement snapshot (flights/ships/trains/vehicles)
+GET  /api/osint               ARGUS movement snapshot (flights/ships/trains/vehicles)
 GET  /api/osint/ships         simulated ship tracks (labelled)
 GET  /api/osint/trains        simulated train tracks (labelled)
 GET  /api/osint/vehicles      simulated vehicle flow (labelled)
