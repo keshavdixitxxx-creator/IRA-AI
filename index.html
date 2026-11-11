@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="edex-ui.css" />
   <link rel="stylesheet" href="office-ui.css" />
+  <link rel="stylesheet" href="argus-ui.css" />
+  <link rel="stylesheet" href="chat-ui.css" />
+  <link rel="stylesheet" href="os-ui.css" />
 </head>
 <body class="welcome-active">
   <canvas id="starfield" aria-hidden="true"></canvas>
@@ -347,6 +350,251 @@
       </section>
     </section>
 
+    <section id="argusScene" class="scene argus-scene" aria-label="IRA ARGUS — all-seeing intelligence HUD">
+      <div class="argus-shell">
+
+        <!-- ── TOP STATUS BAR ─────────────────────────────────────── -->
+        <header class="argus-topbar">
+          <div class="argus-logo">
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <circle cx="16" cy="16" r="13.2" fill="none" stroke="#00e5ff" stroke-width="1.6" opacity=".9"/>
+              <circle cx="16" cy="16" r="5.2" fill="none" stroke="#00e5ff" stroke-width="1.4"/>
+              <circle cx="16" cy="16" r="1.6" fill="#00e5ff"/>
+              <path d="M16 1v6M16 25v6M1 16h6M25 16h6" stroke="#00e5ff" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <div>
+              <div class="name">IRA <b>// ARGUS</b></div>
+              <div class="sub">ALL-SEEING INTELLIGENCE HUD</div>
+            </div>
+          </div>
+          <div class="argus-memcore" title="IRA's persistent memory — she learns from every answer and resumes where she left off. A transparent memory counter, not model training.">
+            <span><em>MEM</em><b id="argusMemLevel">LV 1</b></span><span class="sep">│</span>
+            <span><em>INTERACTIONS</em><b id="argusMemCount">0 LEARNED</b></span><span class="sep hide-md">│</span>
+            <span class="hide-md"><em>FOCUS</em><b id="argusMemTopic">TOP: —</b></span><span class="sep hide-md">│</span>
+            <span class="hide-md"><em>RESUMED FROM</em><b id="argusMemLast">—</b></span>
+          </div>
+          <div class="argus-voice" id="argusVoice"><i></i>VOICE</div>
+          <div class="argus-clock"><div class="t" id="argusClock">--:--:--</div><div class="d" id="argusDate">UTC</div></div>
+        </header>
+
+        <div class="argus-main">
+
+          <!-- ── 01 · WORLD WIRE ────────────────────────────────────── -->
+          <aside class="argus-panel" aria-label="Live news wire">
+            <header class="argus-panel-head"><span class="idx">01</span> WORLD WIRE <span class="right" id="argusNewsStatus">SYNCING</span></header>
+            <div class="wire-body">
+              <a class="wire-spotlight" id="argusSpotlightLink" href="#" target="_blank" rel="noreferrer" aria-label="Open current headline">
+                <img class="photo" id="argusSpotlightImg" alt="" />
+                <div class="fallback" id="argusSpotlightFallback">IR</div>
+                <div class="shade"></div>
+                <div class="copy">
+                  <div class="kicker"><span>TOP STORY</span><span id="argusSpotlightCounter">-- / --</span></div>
+                  <h2 id="argusSpotlightTitle">Syncing world wire…</h2>
+                  <div class="meta" id="argusSpotlightMeta"></div>
+                </div>
+              </a>
+              <div class="wire-counter"><span>ROTATION · 1.0S</span><div class="bar"><i id="argusSpotlightBar" style="width:0%"></i></div></div>
+              <div class="wire-list" id="argusNewsList" aria-label="Headline index"></div>
+            </div>
+          </aside>
+
+          <!-- ── 02 · GLOBAL TRACKING ──────────────────────────────── -->
+          <section class="argus-panel globe-panel" aria-label="OSINT globe">
+            <header class="argus-panel-head"><span class="idx">02</span> GLOBAL TRACKING <span class="right"><span id="argusGlobeStatus">SYNCING</span><button type="button" class="argus-btn" id="argusGlobeToggle">HOLD</button></span></header>
+            <div class="globe-wrap">
+              <canvas id="argusGlobe" aria-label="Draggable globe with live and simulated movement tracks"></canvas>
+              <div class="globe-corners" aria-hidden="true"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+              <span class="globe-coord tl">LAT 28.6° N</span>
+              <span class="globe-coord tr">LON 77.2° E</span>
+              <span class="globe-coord bl">PROJ · ORTHO</span>
+              <span class="globe-coord br">GRID 30°</span>
+            </div>
+            <div class="feed-matrix" id="argusFeedMatrix" aria-label="Feed status"></div>
+            <div class="globe-legend" aria-label="Layer toggles">
+              <button type="button" data-layer="flights" class="active"><i style="background:#00e5ff"></i>FLIGHTS <b class="tag-live">LIVE</b></button>
+              <button type="button" data-layer="military" class="active"><i style="background:#ffb13b"></i>MIL <b class="tag-live">LIVE</b></button>
+              <button type="button" data-layer="iss" class="active"><i style="background:#ffffff"></i>ISS <b class="tag-live">LIVE</b></button>
+              <button type="button" data-layer="quakes" class="active"><i style="background:#ff5450"></i>QUAKES <b class="tag-live">LIVE</b></button>
+              <button type="button" data-layer="natural" class="active"><i style="background:#ff9630"></i>NATURAL <b class="tag-live">LIVE</b></button>
+              <button type="button" data-layer="ships" class="active"><i style="background:#78c6ff"></i>SHIPS <b class="tag-sim">SIM</b></button>
+              <button type="button" data-layer="trains" class="active"><i style="background:#46f0b0"></i>TRAINS <b class="tag-sim">SIM</b></button>
+              <button type="button" data-layer="vehicles" class="active"><i style="background:#ce94ff"></i>VEHICLES <b class="tag-sim">SIM</b></button>
+              <button type="button" data-layer="traffic" class="active"><i style="background:#4de3c1"></i>TRAFFIC <b class="tag-sim">SIM</b></button>
+            </div>
+            <div class="globe-stats"><span>FLIGHTS <b id="statFlights">0</b></span><span>MIL <b id="statMilitary">0</b></span><span>SHIPS <b id="statShips">0</b></span><span>TRAINS <b id="statTrains">0</b></span><span>VEHICLES <b id="statVehicles">0</b></span><span>QUAKES <b id="statQuakes">0</b></span><span class="honesty">LIVE = keyless public feeds · SIM = deterministic routes on real corridors</span></div>
+          </section>
+
+          <!-- ── 03 · LIVE VIDEO ───────────────────────────────────── -->
+          <aside class="argus-panel" aria-label="Live video">
+            <header class="argus-panel-head"><span class="idx">03</span> LIVE VIDEO <span class="right">YOUTUBE · PUBLIC · NO KEY</span></header>
+            <div class="video-body">
+              <div class="video-grid" id="argusCameraGrid"></div>
+              <div class="video-note"><b>EMBED BLANK?</b> The broadcaster is blocking the embed or your network can’t reach YouTube. Use <b>OPEN ↗</b> on any card — the stream opens on YouTube directly.</div>
+            </div>
+          </aside>
+        </div>
+
+        <!-- ── 04 · ASK STRIP ─────────────────────────────────────── -->
+        <form class="argus-askbar" id="argusAskForm" autocomplete="off" aria-label="Ask IRA from ARGUS">
+          <span class="prompt">IRA ›</span>
+          <input id="argusAskInput" type="text" placeholder="Ask IRA anything…" aria-label="Ask IRA" />
+          <button type="submit">QUERY</button>
+          <span class="argus-ask-status" id="argusAskStatus">READY</span>
+          <span class="argus-ask-answer" id="argusAnswerText" role="status">Awaiting query.</span>
+        </form>
+
+        <!-- ── HEADLINE TICKER ────────────────────────────────────── -->
+        <div class="argus-ticker" aria-hidden="true"><span class="label">HEADLINES</span><div class="ticker-track" id="argusTickerTrack"></div></div>
+      </div>
+    </section>
+
+    <section id="chatScene" class="scene chat-scene" aria-label="IRA Chat">
+      <div class="chat-shell">
+        <header class="chat-topbar">
+          <div class="chat-brand">IRA <b>// CHAT</b><small>THE SIMPLE CONVERSATION</small></div>
+          <div class="spacer"></div>
+          <button type="button" class="chat-chip" id="chatNewBtn" title="Start a fresh conversation">+ NEW CHAT</button>
+          <button type="button" class="chat-chip" id="chatClearBtn" title="Clear this conversation">CLEAR</button>
+        </header>
+
+        <div class="chat-scroll" id="chatScroll" aria-live="polite">
+          <div class="chat-empty" id="chatEmpty">
+            <div class="wordmark">How can I <em>help</em> today?</div>
+            <p>Ask anything — the same connected brain as every other IRA mode, without the instruments.</p>
+            <div class="chat-suggestions" id="chatSuggestions">
+              <button type="button" data-prompt="Give me a briefing on today's top news">Today's top news</button>
+              <button type="button" data-prompt="Explain quantum computing simply">Explain quantum computing</button>
+              <button type="button" data-prompt="Write a haiku about the monsoon over Delhi">Write me a haiku</button>
+              <button type="button" data-prompt="What can you help me with?">What can you do?</button>
+            </div>
+          </div>
+          <div class="chat-inner" id="chatInner"></div>
+        </div>
+
+        <form class="chat-composer" id="chatComposer" autocomplete="off">
+          <div class="chat-composer-box">
+            <textarea id="chatInput" rows="1" placeholder="Message IRA…" aria-label="Message IRA"></textarea>
+            <button type="submit" class="chat-send" id="chatSend" aria-label="Send message">↑</button>
+          </div>
+          <p class="chat-footnote">IRA CAN MAKE MISTAKES · CHECK IMPORTANT ANSWERS · HISTORY IS STORED LOCALLY IN THIS BROWSER</p>
+        </form>
+      </div>
+    </section>
+
+    <section id="osScene" class="scene os-scene" aria-label="IRA K-10 — a Windows-flavoured desktop with Kali Linux at heart, and IRA on call">
+      <div class="os-desktop" id="osDesktop">
+
+        <!-- boot overlay -->
+        <div class="os-boot" id="osBoot" aria-hidden="true">
+          <pre class="os-boot-lines" id="osBootLines"></pre>
+          <p class="os-skip">PRESS ANY KEY · CLICK TO SKIP</p>
+        </div>
+
+        <!-- lock screen -->
+        <div class="os-lock" id="osLock" aria-hidden="true">
+          <div class="os-lock-glow"></div>
+          <div class="os-lock-time" id="osLockTime">--:--</div>
+          <div class="os-lock-date" id="osLockDate">—</div>
+          <div class="os-lock-badge"><span class="os-lock-dot"></span>IRA K-10 · SECURE SESSION · SIMULATED ENVIRONMENT</div>
+          <div class="os-lock-user"><div class="os-lock-avatar">K</div><div><b>root</b><small>keshav · sudo powers granted by IRA</small></div></div>
+          <p class="os-lock-hint">CLICK ANYWHERE TO SIGN IN</p>
+        </div>
+
+        <!-- desktop icons -->
+        <div class="os-icons" id="osIcons" role="list"></div>
+
+        <!-- window layer -->
+        <div class="os-windows" id="osWindows"></div>
+
+        <!-- start menu -->
+        <div class="os-start" id="osStart" aria-hidden="true" role="menu" aria-label="Start menu">
+          <div class="os-start-rail">
+            <button class="os-rail-btn" id="osRailCopilot" title="IRA Copilot" aria-label="IRA Copilot">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9"/></svg>
+            </button>
+            <button class="os-rail-btn" data-app="explorer" title="This PC" aria-label="This PC">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="6.5" rx="1"/><rect x="2.5" y="13.5" width="19" height="6.5" rx="1"/><circle cx="6.5" cy="7.2" r=".5" fill="currentColor"/><circle cx="6.5" cy="16.7" r=".5" fill="currentColor"/></svg>
+            </button>
+            <button class="os-rail-btn" data-app="terminal" title="IRA Root Terminal" aria-label="IRA Root Terminal">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="1.5"/><path d="M6 9l3.5 3L6 15"/><path d="M11 15.5h6"/></svg>
+            </button>
+            <div class="os-rail-spacer"></div>
+            <button class="os-rail-btn os-rail-power" id="osPowerBtn" title="Power — lock session" aria-label="Power — lock session">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg>
+            </button>
+          </div>
+
+          <div class="os-start-apps">
+            <label class="os-start-search"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg><input id="osStartSearch" type="text" placeholder="Type here to search apps" autocomplete="off" aria-label="Search apps" /></label>
+            <p class="os-start-heading">All apps</p>
+            <div class="os-app-list" id="osAppList" role="list"></div>
+          </div>
+
+          <div class="os-tiles" id="osTiles" aria-label="Pinned tiles">
+            <button class="os-tile os-tile-wide os-tile-accent" data-app="copilot">
+              <b>IRA COPILOT</b><span>Ask me anything — I have the whole wire memorised.</span>
+              <i>AI ORCHESTRATOR · ONLINE</i>
+            </button>
+            <button class="os-tile os-tile-live" data-app="wire">
+              <b>ARGUS WIRE</b><span class="os-tile-line" id="osTileWire">Reading the wire…</span>
+              <i>RSS · NO KEY</i>
+            </button>
+            <button class="os-tile os-tile-mem" data-app="copilot">
+              <b>HERMES MEMORY</b><span class="os-tile-memory" id="osTileMemory">LV —</span>
+              <i>PERSISTENT</i>
+            </button>
+            <button class="os-tile" data-app="monitor">
+              <b>SYSTEM</b><span class="os-tile-memory" id="osTileCpu">CPU —</span>
+              <i>LIVE METERS</i>
+            </button>
+            <button class="os-tile os-tile-term" data-app="terminal">
+              <b>ROOT TERMINAL</b><span>root@ira:~# whoami</span>
+              <i>NANO · CURL · AI</i>
+            </button>
+          </div>
+
+          <div class="os-start-foot">
+            <span class="os-start-user"><i></i>root · keshav</span>
+            <span class="os-start-note">K-10 is a SIMULATION — answers by AI can err · actions & scans are fictional</span>
+          </div>
+        </div>
+
+        <!-- taskbar -->
+        <div class="os-taskbar" role="toolbar" aria-label="Taskbar">
+          <button class="os-start-btn" id="osStartBtn" aria-label="Start" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M3 5.4 10.4 4.3V11.3H3zM11.5 4.1 21 3v8.3h-9.5zM3 12.6h7.4v7L3 18.5zM11.5 12.6H21V21l-9.5-1.3z"/></svg>
+          </button>
+          <div class="os-search" id="osSearchWrap">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.8"/><path d="M15.8 15.8L21 21"/></svg>
+            <input id="osSearchInput" type="text" placeholder="Type here to ask IRA or search the OS" autocomplete="off" spellcheck="false" aria-label="Ask IRA or search the OS" />
+            <kbd>↵</kbd>
+            <div class="os-search-results" id="osSearchResults" role="listbox" aria-hidden="true"></div>
+          </div>
+          <div class="os-task-buttons" id="osTaskButtons" aria-label="Open windows"></div>
+          <div class="os-tray">
+            <button class="os-tray-btn os-tray-caret" id="osTrayCaret" aria-label="Show hidden icons" tabindex="-1">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 14l6-6 6 6"/></svg>
+            </button>
+            <span class="os-tray-btn os-tray-static" title="Network — IRA mesh (simulated)">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2.5 9a15 15 0 0 1 19 0"/><path d="M6 13a10.5 10.5 0 0 1 12 0"/><path d="M9.6 16.8a6 6 0 0 1 4.8 0"/><circle cx="12" cy="19.6" r=".4" fill="currentColor"/></svg>
+            </span>
+            <span class="os-tray-btn os-tray-static" title="Volume — 100%">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18V6L7.5 9.5H4z" fill="currentColor" stroke="none" opacity=".85"/><path d="M15 9.5a4.5 4.5 0 0 1 0 5"/><path d="M17.8 7.2a8 8 0 0 1 0 9.6"/></svg>
+            </span>
+            <span class="os-tray-btn os-tray-static" id="osBattery" title="Power">⌁</span>
+            <button class="os-clock" id="osClockWrap" aria-label="Date and time">
+              <span class="os-clock-time" id="osClock">--:--</span>
+              <span class="os-clock-date" id="osClockDate">—</span>
+            </button>
+            <button class="os-show-desktop" id="osShowDesktop" title="Show desktop" aria-label="Show desktop"></button>
+          </div>
+        </div>
+
+        <!-- in-OS toast -->
+        <div class="os-toast" id="osToast" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
     <section class="response-panel" id="responsePanel">
       <div class="speaker"><div class="speaker-ring">IA</div></div>
       <div class="response-copy">
@@ -390,6 +638,9 @@
         <button data-mode="vrm"><span>⬡</span> VRM</button>
         <button data-mode="edex"><span>▣</span> EDEX</button>
         <button data-mode="office"><span>▦</span> OFFICE</button>
+        <button data-mode="argus"><span>⌖</span> ARGUS</button>
+        <button data-mode="chat"><span>❝</span> CHAT</button>
+        <button data-mode="os"><span>⊞</span> K-10 OS</button>
       </div>
     </div>
     <label class="setting"><span><b>Voice responses</b><small>Read IRA's answers aloud</small></span><input id="voiceToggle" type="checkbox" checked /><i></i></label>
@@ -437,5 +688,8 @@
   <script src="app.js"></script>
   <script src="edex-ui.js"></script>
   <script src="office-ui.js"></script>
+  <script src="argus-ui.js"></script>
+  <script src="chat-ui.js"></script>
+  <script src="os-ui.js"></script>
 </body>
 </html>

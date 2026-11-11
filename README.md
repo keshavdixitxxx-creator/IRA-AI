@@ -1,6 +1,6 @@
 # IRA AI — Immersive Responsive Assistant
 
-A polished browser prototype for a multimodal personal assistant with **five visual modes**:
+A polished browser prototype for a multimodal personal assistant with **eight visual modes**:
 
 1. **Liquid Orb** — animated voice-reactive visualizer
 2. **Anime Persona** — cinematic avatar presentation
@@ -10,6 +10,15 @@ A polished browser prototype for a multimodal personal assistant with **five vis
    and an automatic YouTube news-video manager
 5. **IRA Office** — a blue high-tech office with ten seated specialists, one user-controlled boss,
    individual workspaces, research/coding tools, a browser, and real Word/Excel/PowerPoint downloads
+6. **IRA Argus** — an all-seeing intelligence HUD: a photo-led world wire that rotates headlines every
+   second, an OSINT tracking globe with live feeds and moving ship/train/vehicle tracks, public live
+   YouTube video, and IRA's persistent memory built into the top bar
+7. **IRA Chat** — a clean, simple conversation in the style of Gemini/ChatGPT: one stream of
+   messages, suggestion chips, a rounded composer, and per-answer engine chips. No dashboard chrome.
+8. **IRA K-10** — a simulated Windows 10 desktop with a Kali Linux heart and IRA as the AI on call:
+   boot sequence, lock screen, draggable windows, Start menu with live tiles, taskbar with ask-IRA
+   search, a root terminal (news · SIMULATED scan · drills · free-text → IRA), this-PC file explorer,
+   an Argus wire reader, a live system monitor and Hermes-aware say-hi memory
 
 VRM files stay in the browser and are never uploaded.
 
@@ -211,6 +220,77 @@ YouTube playback depends on network access, current channel livestreams, and eac
 embedding policy. Unavailable embeds are skipped automatically; **OPEN ↗** remains available as
 a direct fallback.
 
+## IRA Argus (UI 6)
+
+Choose **ARGUS** under **Settings → Interface mode**. It is intentionally not pinned to the top bar.
+
+- **WORLD WIRE (01):** a photo-led top story that rotates every second (hover index items to jump),
+  a progress counter, and a scrolling index of 30 headlines with source, time and photo thumbnails.
+  Headlines come from Google News RSS merged with The Guardian RSS (which embeds article photos) —
+  no key required; items link out to the original story.
+- **GLOBAL TRACKING (02):** a draggable orthographic globe. Live keyless public feeds — ADS-B civil and
+  military aircraft (airplanes.live / adsb.lol), the ISS orbit (wheretheiss.at), USGS earthquakes and NASA
+  EONET natural events — are plotted alongside **simulated** tracks for 24 ships on six real lanes, 8 trains
+  (Rajdhani, Shinkansen, TGV, Acela), 30 vehicles on six corridors and Delhi/Mumbai/Bengaluru/New York/London/
+  Tokyo traffic signals. Ships, trains, vehicles and traffic are labelled **SIM** in the legend, stats bar,
+  feed matrix and README — no keyless live AIS/GTFS/telematics feed exists, so those layers are deterministic
+  simulations along real corridors and are never presented as live data.
+- **FEED MATRIX:** a per-feed LIVE / SIM / OFFLINE readout under the globe, including the upstream error when
+  a live feed can't be reached — so an empty layer always says *why*.
+- **LIVE VIDEO (03):** curated public YouTube live broadcasts (DW News, Al Jazeera English, Sky News, NASA
+  Live…). No key, no scraping, no stored video. If a provider blocks the embed, the per-card **OPEN ↗** link
+  opens the stream on YouTube directly.
+- **IRA MEMORY CORE:** Hermes — IRA's persistent learning engine — now lives inside IRA herself: the top bar
+  shows her level, interaction count, current focus topic and the exact point she resumed from after restart.
+  She learns from every answer IRA gives and gains XP continuously (+1 XP/s heartbeat, +10–30 per interaction),
+  persisted in `data/hermes-memory.json` (git-ignored). This is a transparent memory counter, **not**
+  neural-network training; nothing about it is hidden.
+
+Live feeds require outbound network access to their public endpoints; unreachable feeds are shown as
+OFFLINE in the feed matrix and the wire/globe degrade honestly instead of fabricating data.
+
+## IRA Chat (UI 7)
+
+Choose **CHAT** under **Settings → Interface mode**. It is deliberately the opposite of every HUD:
+
+- **One conversation:** user and IRA rows with 34px avatars, a typewriter reveal with a caret, and a
+  "thinking" dot trio while the brain works. Press Enter to send, Shift+Enter for a newline.
+- **Suggestion chips** on the empty state ("Today's top news", "Explain quantum computing", …).
+- **Honest engine chip:** every IRA answer carries the engine that produced it (cloud brain, local
+  fallback, and so on) — exactly what `askIRA` reported.
+- **Local history:** the last 60 messages persist in `localStorage` (`iraChatHistoryV1`), with New Chat
+  to start fresh. Nothing is sent anywhere except the question, through the same `askIRA` path every
+  other mode uses.
+
+## IRA K-10 (UI 8)
+
+Choose **K-10 OS** under **Settings → Interface mode**. A simulated desktop lives inside the page —
+Windows 10 on the surface, Kali Linux underneath, and IRA herself as the AI on call.
+
+- **Boot → lock screen:** an `[ OK ]`-style boot log (skippable) hands over to a Windows-style lock
+  screen with the live clock; click to sign in. The power button in the Start rail locks again.
+- **Desktop icons:** This PC, Root Terminal, IRA Copilot, Argus Wire, System Monitor, Recycle Bin.
+- **Draggable windows** with minimize / maximize / close and a taskbar with buttons, system tray
+  (network, volume, battery via `navigator.getBattery` where available), live clock and a show-desktop sliver.
+- **Start menu:** left rail (Copilot / files / terminal / power), searchable all-apps list, and **live tiles** —
+  IRA Copilot, the latest Wire headline, Hermes memory (level + interactions learned), live CPU/memory, and the terminal.
+- **Taskbar search:** type to filter apps; press **Enter** (or pick “Ask IRA: …”) to send the query straight to
+  IRA's brain in a Copilot window.
+- **IRA Root Terminal** (`root@ira:~#`): `help`, `neofetch`, `news` (reads `/api/intel/news`), `scan`
+  (a clearly labelled **SIMULATED** 192.168.1.0/24 sweep — no packets are sent), `breach <t>` (a labelled
+  training drill), `ask <q>` — and **any free text goes to IRA herself**. Honest about everything: no fake packets, no fake access.
+- **This PC (File Explorer):** a simulated filesystem — `System (C:)` with `Users/ira/Documents`, `kali-tools`, `logs`.
+  `memory.sys` dumps live Hermes state (`/api/hermes/status`), `brain.log` shows her resume point, `wire.log` the latest headlines.
+  The status bar always says **SIMULATED FS — NOT YOUR DISK**.
+- **Argus Wire:** a compact reader for the same RSS wire as ARGUS. Offline → it says so, never fabricates.
+- **System Monitor:** CPU / memory / network meters from `/api/diagnostics` (LIVE, source-labelled) with a CPU history
+  canvas and a **SIMULATED WORKLOAD** process table; degrades to labelled simulation when the endpoint is down.
+- **Hermes says hi:** on entering the mode, IRA posts a toast with the exact point she resumed from. A simulation —
+  except the memory, which is real and persisted in git-ignored `data/hermes-memory.json`.
+
+Everything on the desktop is fiction except IRA's brain and memory; the UI labels simulations as such and links
+out to real reporting from the wire.
+
 ## Optional OpenAI-compatible provider
 
 A secure server-side gateway is also available at `POST /api/chat`. Keys never enter the browser.
@@ -258,7 +338,7 @@ service; for a packaged desktop release, connect the UI through Tauri/Electron I
 
 ## Development and tests
 
-Run the dependency-free server, planner, Ollama-routing, and OOXML tests:
+Run the dependency-free server, planner, Ollama-routing, OOXML, Hermes persistence, and OSINT-simulation tests:
 
 ```bash
 python -m unittest discover -s tests -v
