@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="edex-ui.css" />
   <link rel="stylesheet" href="office-ui.css" />
   <link rel="stylesheet" href="argus-ui.css" />
+  <link rel="stylesheet" href="chat-ui.css" />
+  <link rel="stylesheet" href="dispatch-ui.css" />
 </head>
 <body class="welcome-active">
   <canvas id="starfield" aria-hidden="true"></canvas>
@@ -446,6 +448,92 @@
       </div>
     </section>
 
+    <section id="chatScene" class="scene chat-scene" aria-label="IRA Chat">
+      <div class="chat-shell">
+        <header class="chat-topbar">
+          <div class="chat-brand">IRA <b>// CHAT</b><small>THE SIMPLE CONVERSATION</small></div>
+          <div class="spacer"></div>
+          <button type="button" class="chat-chip" id="chatNewBtn" title="Start a fresh conversation">+ NEW CHAT</button>
+          <button type="button" class="chat-chip" id="chatClearBtn" title="Clear this conversation">CLEAR</button>
+        </header>
+
+        <div class="chat-scroll" id="chatScroll" aria-live="polite">
+          <div class="chat-empty" id="chatEmpty">
+            <div class="wordmark">How can I <em>help</em> today?</div>
+            <p>Ask anything — the same connected brain as every other IRA mode, without the instruments.</p>
+            <div class="chat-suggestions" id="chatSuggestions">
+              <button type="button" data-prompt="Give me a briefing on today's top news">Today's top news</button>
+              <button type="button" data-prompt="Explain quantum computing simply">Explain quantum computing</button>
+              <button type="button" data-prompt="Write a haiku about the monsoon over Delhi">Write me a haiku</button>
+              <button type="button" data-prompt="What can you help me with?">What can you do?</button>
+            </div>
+          </div>
+          <div class="chat-inner" id="chatInner"></div>
+        </div>
+
+        <form class="chat-composer" id="chatComposer" autocomplete="off">
+          <div class="chat-composer-box">
+            <textarea id="chatInput" rows="1" placeholder="Message IRA…" aria-label="Message IRA"></textarea>
+            <button type="submit" class="chat-send" id="chatSend" aria-label="Send message">↑</button>
+          </div>
+          <p class="chat-footnote">IRA CAN MAKE MISTAKES · CHECK IMPORTANT ANSWERS · HISTORY IS STORED LOCALLY IN THIS BROWSER</p>
+        </form>
+      </div>
+    </section>
+
+    <section id="dispatchScene" class="scene dispatch-scene" aria-label="The IRA Dispatch — intelligence paper">
+      <div class="paper">
+
+        <header class="dispatch-masthead">
+          <div class="dispatch-flags"><span>THE ALL-SEEING PRESS</span><span>EST. SESSION 001</span><span>PRICE · ONE QUESTION</span></div>
+          <h1 class="dispatch-name">The IRA <em>Dispatch</em></h1>
+          <div class="dispatch-tagline">“All the news the wire can carry — and one assistant who reads it for you.”</div>
+          <div class="dispatch-edition"><span id="dispatchDate">—</span><span>DELHI EDITION</span><span id="dispatchBuild">Composing…</span></div>
+          <div class="dispatch-offline" id="dispatchOffline">THE WIRE IS UNREACHABLE FROM THIS MACHINE. This edition carries the masthead and the desk only — headlines, photos and sections appear when the server can reach public RSS feeds.</div>
+        </header>
+
+        <div class="dispatch-section">Front Page</div>
+        <div class="dispatch-top">
+          <div>
+            <div class="dispatch-kicker" id="dispatchKicker">TOP STORY</div>
+            <h2 class="dispatch-headline" id="dispatchHeadline">Composing the front page…</h2>
+            <div class="dispatch-top-meta" id="dispatchTopMeta">—</div>
+            <div class="dispatch-digest" id="dispatchDigest">Composing…</div>
+          </div>
+          <figure class="dispatch-photo" id="dispatchLeadPhoto">
+            <img id="dispatchLeadPhotoImg" alt="Top story photograph" />
+            <figcaption id="dispatchLeadPhotoCap">Photo via feed embed</figcaption>
+          </figure>
+        </div>
+
+        <div class="dispatch-section">The Briefs</div>
+        <div class="dispatch-briefs" id="dispatchBriefs"></div>
+
+        <div class="dispatch-section">The Wire · Continued</div>
+        <div class="dispatch-columns">
+          <div class="dispatch-digest-list" id="dispatchWire"></div>
+          <aside>
+            <div class="dispatch-ask">
+              <h3>Ask the Desk</h3>
+              <p style="font: italic 10.5px/1.5 Georgia,serif; color:#a89a83; margin:0 0 8px">Query IRA the way you’d ring a newsroom. Answers are printed below your question.</p>
+              <form id="deskAskForm" autocomplete="off">
+                <input id="deskAskInput" type="text" placeholder="What should the paper chase next?" aria-label="Ask the desk" />
+                <button type="submit">File Query</button>
+              </form>
+              <div id="deskNotes" aria-live="polite"></div>
+            </div>
+            <p style="font: 9px/1.7 Georgia,serif; color:#7e7261; margin:14px 0 0"><b style="color:#a89a83">IRA MEMORY —</b> <span id="dispatchMemory">IRA’s memory ledger prints here each edition.</span></p>
+          </aside>
+        </div>
+
+        <footer class="dispatch-colophon">
+          <span>ALL ITEMS LINK TO THE ORIGINAL REPORTING. PHOTOS ARE FEED EMBEDS WHERE AVAILABLE.</span>
+          <span>AUTO-GENERATED COMPILATION · NOT EDITORIAL ENDORSEMENT · SIM LAYERS REMAIN SIM</span>
+          <span>THE IRA DISPATCH IS PRINTED IN YOUR BROWSER FROM PUBLIC RSS.</span>
+        </footer>
+      </div>
+    </section>
+
     <section class="response-panel" id="responsePanel">
       <div class="speaker"><div class="speaker-ring">IA</div></div>
       <div class="response-copy">
@@ -490,6 +578,8 @@
         <button data-mode="edex"><span>▣</span> EDEX</button>
         <button data-mode="office"><span>▦</span> OFFICE</button>
         <button data-mode="argus"><span>⌖</span> ARGUS</button>
+        <button data-mode="chat"><span>❝</span> CHAT</button>
+        <button data-mode="dispatch"><span>¶</span> DISPATCH</button>
       </div>
     </div>
     <label class="setting"><span><b>Voice responses</b><small>Read IRA's answers aloud</small></span><input id="voiceToggle" type="checkbox" checked /><i></i></label>
@@ -538,5 +628,7 @@
   <script src="edex-ui.js"></script>
   <script src="office-ui.js"></script>
   <script src="argus-ui.js"></script>
+  <script src="chat-ui.js"></script>
+  <script src="dispatch-ui.js"></script>
 </body>
 </html>

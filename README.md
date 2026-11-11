@@ -1,6 +1,6 @@
 # IRA AI — Immersive Responsive Assistant
 
-A polished browser prototype for a multimodal personal assistant with **six visual modes**:
+A polished browser prototype for a multimodal personal assistant with **eight visual modes**:
 
 1. **Liquid Orb** — animated voice-reactive visualizer
 2. **Anime Persona** — cinematic avatar presentation
@@ -13,6 +13,11 @@ A polished browser prototype for a multimodal personal assistant with **six visu
 6. **IRA Argus** — an all-seeing intelligence HUD: a photo-led world wire that rotates headlines every
    second, an OSINT tracking globe with live feeds and moving ship/train/vehicle tracks, public live
    YouTube video, and IRA's persistent memory built into the top bar
+7. **IRA Chat** — a clean, simple conversation in the style of Gemini/ChatGPT: one stream of
+   messages, suggestion chips, a rounded composer, and per-answer engine chips. No dashboard chrome.
+8. **The IRA Dispatch** — a daily broadsheet intelligence paper composed from the same live world
+   wire: masthead, front-page story with photo and an auto-composed digest, the briefs, the wire, and
+   an "Ask the Desk" box whose answers are printed into the edition
 
 VRM files stay in the browser and are never uploaded.
 
@@ -242,6 +247,38 @@ Choose **ARGUS** under **Settings → Interface mode**. It is intentionally not 
 
 Live feeds require outbound network access to their public endpoints; unreachable feeds are shown as
 OFFLINE in the feed matrix and the wire/globe degrade honestly instead of fabricating data.
+
+## IRA Chat (UI 7)
+
+Choose **CHAT** under **Settings → Interface mode**. It is deliberately the opposite of every HUD:
+
+- **One conversation:** user and IRA rows with 34px avatars, a typewriter reveal with a caret, and a
+  "thinking" dot trio while the brain works. Press Enter to send, Shift+Enter for a newline.
+- **Suggestion chips** on the empty state ("Today's top news", "Explain quantum computing", …).
+- **Honest engine chip:** every IRA answer carries the engine that produced it (cloud brain, local
+  fallback, and so on) — exactly what `askIRA` reported.
+- **Local history:** the last 60 messages persist in `localStorage` (`iraChatHistoryV1`), with New Chat
+  to start fresh. Nothing is sent anywhere except the question, through the same `askIRA` path every
+  other mode uses.
+
+## The IRA Dispatch (UI 8)
+
+Choose **DISPATCH** under **Settings → Interface mode**. A newspaper front page rendered live from the
+world wire — Georgia serif, double rules, just the facts:
+
+- **Front Page:** the lead story as a balanced serif headline with a feed-embedded photo (monogram
+  fallback when the feed carries none) and an **auto-digest** composed locally from the RSS headlines —
+  explicitly labelled "Auto-digest · composed locally… not editorial judgement".
+- **The Briefs:** the next stories as serif cards with photos where the feed embeds them; **The Wire · Continued**
+  lists the rest with UTC times.
+- **Ask the Desk:** ring the newsroom — your question is answered by IRA (same brain) and printed into
+  the edition as a dated desk note.
+- **Honest off-days:** when the wire is unreachable from the machine, the masthead still prints with an
+  "THE WIRE IS UNREACHABLE…" banner, the front page reads "The wire is silent.", and no headline is ever
+  invented. Ask the Desk still answers.
+
+Everything links back to the original reporting; Dispatch is a compilation, not editorial endorsement,
+and it carries no SIM layers of its own.
 
 ## Optional OpenAI-compatible provider
 
